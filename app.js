@@ -7,6 +7,10 @@ const MongoDB = require("./app/utils/mongodb.util");
 const app = express();
 app.use(cors());
 app.use(express.json());
+const path = require("path");
+
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
 
 const readerRoutes = require("./app/routes/reader.routes");
 const employeeRoutes = require("./app/routes/employee.routes");

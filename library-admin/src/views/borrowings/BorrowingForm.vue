@@ -1,40 +1,69 @@
 <template>
     <div class="container mt-5">
-        <div class="card shadow-lg border-0">
-            <div class="card-header bg-warning text-dark">
+        <div class="card shadow-lg border-0 rounded-lg">
+
+            <!-- HEADER -->
+            <div class="card-header text-white d-flex align-items-center justify-content-between"
+                style="background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);">
                 <h3 class="mb-0">{{ isEdit ? 'Sửa Phiếu Mượn' : 'Tạo Phiếu Mượn Mới' }}</h3>
+                <i class="fas fa-book-reader fa-lg"></i>
             </div>
-            <div class="card-body p-5">
+
+            <!-- BODY -->
+            <div class="card-body bg-white p-5 rounded-bottom">
                 <form @submit.prevent="saveBorrowing">
                     <div class="row">
+
+                        <!-- Cột trái -->
                         <div class="col-md-6">
                             <div class="form-group mb-4">
                                 <label class="font-weight-bold">Mã mượn</label>
-                                <input v-model="borrowing.MaMuon" type="text" class="form-control form-control-lg"
-                                    :disabled="isEdit" required>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                                    </div>
+                                    <input v-model="borrowing.MaMuon" type="text" class="form-control form-control-lg"
+                                        :disabled="isEdit" required>
+                                </div>
                             </div>
+
                             <div class="form-group mb-4">
                                 <label class="font-weight-bold">Mã độc giả</label>
-                                <input v-model="borrowing.MaDocGia" type="text" class="form-control form-control-lg"
-                                    required>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    </div>
+                                    <input v-model="borrowing.MaDocGia" type="text" class="form-control form-control-lg"
+                                        required>
+                                </div>
                             </div>
+
                             <div class="form-group mb-4">
                                 <label class="font-weight-bold">Mã sách</label>
-                                <input v-model="borrowing.MaSach" type="text" class="form-control form-control-lg"
-                                    required>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-book"></i></span>
+                                    </div>
+                                    <input v-model="borrowing.MaSach" type="text" class="form-control form-control-lg"
+                                        required>
+                                </div>
                             </div>
                         </div>
+
+                        <!-- Cột phải -->
                         <div class="col-md-6">
                             <div class="form-group mb-4">
                                 <label class="font-weight-bold">Ngày mượn</label>
                                 <input v-model="borrowing.NgayMuon" type="date" class="form-control form-control-lg"
                                     required>
                             </div>
+
                             <div class="form-group mb-4">
                                 <label class="font-weight-bold">Ngày trả</label>
                                 <input v-model="borrowing.NgayTra" type="date" class="form-control form-control-lg"
                                     required>
                             </div>
+
                             <div class="form-group mb-4">
                                 <label class="font-weight-bold">Trạng thái</label>
                                 <select v-model="borrowing.TrangThai" class="form-control form-control-lg"
@@ -47,11 +76,19 @@
                                 </select>
                             </div>
                         </div>
+
                     </div>
-                    <div class="text-right mt-4">
-                        <button type="button" @click="$router.go(-1)" class="btn btn-secondary btn-lg mr-3">Hủy</button>
-                        <button type="submit" class="btn btn-success btn-lg px-5">Lưu</button>
+
+                    <!-- Nút hành động -->
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="button" @click="$router.go(-1)" class="btn btn-secondary btn-lg mr-3">
+                            <i class="fas fa-times mr-1"></i> Hủy
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-save mr-1"></i> Lưu
+                        </button>
                     </div>
+
                 </form>
             </div>
         </div>
@@ -97,3 +134,30 @@ const saveBorrowing = async () => {
 
 onMounted(fetchBorrowing)
 </script>
+
+<style scoped>
+.card-header h3 {
+    font-weight: 700;
+}
+
+.input-group-text {
+    background-color: #f1f1f1;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.card-body {
+    background-color: #fff;
+}
+</style>

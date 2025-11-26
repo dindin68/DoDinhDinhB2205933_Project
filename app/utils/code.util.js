@@ -1,17 +1,27 @@
 const MongoDB = require("./mongodb.util");
 
-async function getNextCode(seqName, prefix = "", digits = 4) {
+async function getNextCode(collectionName, prefix, digits = 3) {
   const client = await MongoDB.connect(process.env.MONGO_URI);
-  const db = client.db("library_db");
-  const result = await db
-    .collection("counters")
-    .findOneAndUpdate(
-      { _id: seqName },
-      { $inc: { seq: 1 } },
-      { upsert: true, returnDocument: "after" }
-    );
-  const n = result.value.seq;
-  return prefix + String(n).padStart(digits, "0");
+  try {
+    const db = client.db("library_db");
+    const lastItem = await db
+      .collection(collectionName)
+      .find({ MaNXB: { $regex: `^${prefix}` } })
+      .sort({ MaNXB: -1 })
+      .limit(1)
+      .toArray();
+
+    let nextNumber = 1;
+    if (lastItem.length > 0) {
+      const lastCode = lastItem[0].MaNXB;
+      const numberPart = parseInt(lastCode.slice(prefix.length)) || 0;
+      nextNumber = numberPart + 1;
+    }
+
+    return prefix + String(nextNumber).padStart(digits, "0");
+  } finally {
+    await client.close();
+  }
 }
 
 module.exports = { getNextCode };

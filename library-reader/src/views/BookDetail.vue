@@ -4,6 +4,9 @@
         <div v-if="loading">Đang tải...</div>
         <div v-else-if="book">
             <h2>{{ book.TenSach || book.title }}</h2>
+            <div v-if="book.ImageUrl" style="margin:12px 0">
+                <img :src="book.ImageUrl" alt="book" style="max-width:220px; border-radius:6px;" />
+            </div>
             <p> Mã: {{ book.MaSach || book.code }}</p>
             <p> Tác giả: {{ book.TacGia || book.author }}</p>
             <p> Mô tả: {{ book.MoTa || book.description }}</p>

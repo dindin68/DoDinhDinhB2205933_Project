@@ -27,16 +27,16 @@
                             </thead>
                             <tbody>
                                 <tr v-for="reader in readers" :key="reader._id"
-                                    class="border-b hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition">
-                                    <td class="px-8 py-6 font-mono text-indigo-600 font-bold text-lg">{{ reader.MaDocGia
+                                    class="border-b hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition text-center">
+                                    <td class="px-8 py-6 font-mono text-indigo-600 font-bold text-lg">{{ reader.MADOCGIA
                                     }}
                                     </td>
-                                    <td class="px-8 py-6 font-semibold text-gray-800">{{ reader.HoLot }}</td>
-                                    <td class="px-8 py-6 text-gray-800">{{ reader.Ten }}</td>
-                                    <td class="px-8 py-6 text-gray-600">{{ formatDate(reader.NgaySinh) }}</td>
-                                    <td class="px-8 py-6 text-gray-600">{{ reader.Phai }}</td>
-                                    <td class="px-8 py-6 text-gray-600">{{ reader.DiaChi }}</td>
-                                    <td class="px-8 py-6 text-gray-600">{{ reader.DienThoai }}</td>
+                                    <td class="px-8 py-6 font-semibold text-gray-800">{{ reader.HOLOT }}</td>
+                                    <td class="px-8 py-6 text-gray-800">{{ reader.TEN }}</td>
+                                    <td class="px-8 py-6 text-gray-600">{{ formatDate(reader.NGAYSINH) }}</td>
+                                    <td class="px-8 py-6 text-gray-600">{{ reader.PHAI }}</td>
+                                    <td class="px-8 py-6 text-gray-600">{{ reader.DIACHI }}</td>
+                                    <td class="px-8 py-6 text-gray-600">{{ reader.DIENTHOAI }}</td>
                                     <td class="px-8 py-6 text-center space-x-4">
                                         <button @click="$router.push(`/readers/edit/${reader.MaDocGia}`)"
                                             class="text-blue-600 hover:text-blue-800 font-medium transition">

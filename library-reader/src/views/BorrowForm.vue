@@ -36,13 +36,28 @@ onMounted(async () => {
     } catch (e) { }
 })
 
+// Require reader login: if no reader_token, redirect to login
+onMounted(() => {
+    const token = localStorage.getItem('reader_token')
+    if (!token) {
+        // send user to reader login
+        router.push('/login')
+    }
+})
+
 const submit = async () => {
     try {
-        // basic payload. Backend may expect specific fields; adjust as needed.
+        // basic payload. Backend now requires Authorization Bearer token (reader_token)
         await api.post('/borrowings', { MaSach: book.value.MaSach || book.value._id, NgayMuon: form.value.NgayMuon, NgayTra: form.value.NgayTra })
         alert('Yêu cầu mượn đã gửi')
         router.push('/my-borrowings')
     } catch (e) {
+        console.error('Borrow submit error', e)
+        if (e?.response?.status === 401) {
+            alert('Bạn cần đăng nhập để mượn sách')
+            router.push('/login')
+            return
+        }
         alert(e?.response?.data?.message || 'Lỗi gửi yêu cầu')
     }
 }

@@ -29,18 +29,54 @@ exports.getOne = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
+  let client;
   try {
-    const client = await MongoDB.connect(process.env.MONGO_URI);
+    // Verify Authorization header (Bearer token) to ensure reader is logged in
+    const authHeader = req.headers.authorization || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Unauthorized: token missing" });
+    }
+    const token = authHeader.split(" ")[1];
+    let payload;
+    try {
+      payload = require("jsonwebtoken").verify(
+        token,
+        process.env.JWT_SECRET || "change-this-secret"
+      );
+    } catch (e) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    client = await MongoDB.connect(process.env.MONGO_URI);
     const db = client.db("library_db");
-    // Gán trạng thái mặc định là "ChoDuyet" khi tạo phiếu mượn
+
+    // build borrowing data and attach reader id from token if role=reader
     const borrowingData = {
       ...req.body,
       TrangThai: "ChoDuyet",
-      NgayTao: new Date(), // Thêm ngày tạo để theo dõi
+      NgayTao: new Date(),
     };
+
+    // If token belongs to a reader, attach their MaDocGia automatically
+    if (payload && payload.role === "reader") {
+      borrowingData.MaDocGia = payload.id;
+    } else if (payload && payload.msnv) {
+      // admin logged in — require client to pass MaDocGia in body
+      if (!borrowingData.MaDocGia) {
+        return res
+          .status(400)
+          .json({
+            message: "MaDocGia required when creating on behalf of reader",
+          });
+      }
+    } else {
+      return res.status(403).json({ message: "Forbidden: insufficient role" });
+    }
+
     if (!borrowingData.MaMuon) {
       borrowingData.MaMuon = await getNextCode("borrowings", "MM", 3);
     }
+
     const result = await db
       .collection("THEODOIMUONSACH")
       .insertOne(borrowingData);
@@ -50,6 +86,12 @@ exports.create = async (req, res) => {
     res.status(201).json(newBorrowing);
   } catch (err) {
     res.status(400).json({ message: err.message });
+  } finally {
+    if (client) {
+      try {
+        await client.close();
+      } catch (e) {}
+    }
   }
 };
 

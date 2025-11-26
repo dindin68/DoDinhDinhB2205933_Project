@@ -19,6 +19,7 @@
                                 style="background: linear-gradient(90deg, #6366f1, #8b5cf6); color: white; border-radius: 1rem;">
                                 <tr>
                                     <th>Mã sách</th>
+                                    <th>Ảnh</th>
                                     <th>Tên sách</th>
                                     <th>Tác giả</th>
                                     <th class="text-center">Năm XB</th>
@@ -26,17 +27,21 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="book in books" :key="book._id" class="table-row-hover">
-                                    <td class="font-monospace font-weight-bold text-primary">{{ book.MaSach }}</td>
-                                    <td class="font-weight-semibold">{{ book.TenSach }}</td>
-                                    <td>{{ book.TacGia }}</td>
-                                    <td class="text-center">{{ book.NamXuatBan }}</td>
+                                <tr v-for="b in books" :key="b._id || b.MaSach" class="table-row-hover">
+                                    <td class="font-monospace font-weight-bold text-primary">{{ b.MaSach }}</td>
+                                    <td>
+                                        <img v-if="b.ImageUrl" :src="apiBase + b.ImageUrl" alt="Ảnh sách"
+                                            style="width: 60px; height: 80px; object-fit: cover; border-radius: 6px;">
+                                    </td>
+                                    <td class="font-weight-semibold">{{ b.TenSach }}</td>
+                                    <td>{{ b.TacGia }}</td>
+                                    <td class="text-center">{{ b.NamXuatBan }}</td>
                                     <td class="text-center">
-                                        <button @click="$router.push(`/books/edit/${book.MaSach}`)"
+                                        <button @click="$router.push(`/books/edit/${b.MaSach}`)"
                                             class="btn btn-outline-primary btn-sm mr-2 btn-action">
                                             ✏️ Sửa
                                         </button>
-                                        <button @click="deleteBook(book.MaSach)"
+                                        <button @click="deleteBook(b.MaSach)"
                                             class="btn btn-outline-danger btn-sm btn-action">
                                             🗑️ Xóa
                                         </button>
@@ -76,6 +81,7 @@ import api from '@/api'
 
 const books = ref([])
 const router = useRouter()
+const apiBase = "http://localhost:3000";  //  BASE URL backend
 
 const fetchBooks = async () => {
     const res = await api.get('/books')

@@ -1,56 +1,64 @@
 <template>
-    <div class="card-body p-4 p-md-5"
-        style="background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899); border-radius: 1.5rem;">
-        <!-- Header + Controls -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="h3 font-weight-bold">Quản lý mượn sách</h2>
-            <div class="form-inline">
-                <input v-model="q" @input="fetchBorrowings" type="text" class="form-control mr-2"
-                    placeholder="Tìm mã mượn, độc giả, sách..." />
-                <button @click="checkOverdue" class="btn btn-warning mr-2">Kiểm tra quá hạn</button>
-                <router-link to="/borrowings/create" class="btn btn-primary">Tạo phiếu mượn</router-link>
-            </div>
-        </div>
+    <div class="container mx-0">
+        <div class="card shadow-lg border-0" style=" border-radius: 0.5rem;">
+            <div class="card-body p-4 p-md-5"
+                style="background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899); border-radius: 1.5rem;">
+                <!-- Header + Controls -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="text-white font-weight-bold">Quản lý mượn sách</h2>
+                    <input v-model="q" @input="fetchBorrowings" type="text" class="form-control mr-2"
+                        placeholder="Tìm mã mượn, độc giả, sách..." />
+                    <button @click="checkOverdue" class="btn btn-warning mr-2">Kiểm tra quá hạn</button>
+                    <router-link to="/borrowings/create" class="btn btn-primary">Tạo phiếu mượn</router-link>
+                </div>
 
-        <!-- Table -->
-        <div class="table-responsive">
-            <table class="table table-striped table-hover table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>Mã mượn</th>
-                        <th>Độc giả</th>
-                        <th>Mã sách</th>
-                        <th>Ng. mượn</th>
-                        <th>Ng. trả</th>
-                        <th>Trạng thái</th>
-                        <th class="text-center">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="b in filtered" :key="b._id">
-                        <td class="font-monospace text-primary">{{ b.MaMuon }}</td>
-                        <td>{{ b.MaDocGia }}</td>
-                        <td>{{ b.MaSach }}</td>
-                        <td>{{ formatDate(b.NgayMuon) }}</td>
-                        <td>{{ formatDate(b.NgayTra) }}</td>
-                        <td>
-                            <span :class="statusClass(b.TrangThai)">{{ b.TrangThai }}</span>
-                        </td>
-                        <td class="text-center">
-                            <button v-if="b.TrangThai === 'ChoDuyet'" @click="updateStatus(b.MaMuon, 'DaDuyet')"
-                                class="btn btn-success btn-sm mb-1">Duyệt</button>
-                            <button v-if="b.TrangThai === 'DaDuyet'" @click="updateStatus(b.MaMuon, 'DaMuon')"
-                                class="btn btn-info btn-sm mb-1">Cho mượn</button>
-                            <button v-if="b.TrangThai === 'DaMuon'" @click="updateStatus(b.MaMuon, 'DaTra')"
-                                class="btn btn-secondary btn-sm mb-1">Trả</button>
-                            <button @click="remove(b.MaMuon)" class="btn btn-danger btn-sm mb-1">Xóa</button>
-                        </td>
-                    </tr>
-                    <tr v-if="!filtered.length">
-                        <td colspan="7" class="text-center text-muted py-4">Chưa có phiếu mượn nào</td>
-                    </tr>
-                </tbody>
-            </table>
+                <!-- Table -->
+                <div class="card shadow" style="border-radius: 0.5rem;">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle text-center">
+                            <thead
+                                style="background: linear-gradient(90deg, #6366f1, #8b5cf6); color: white; border-radius: 1rem;">
+                                <tr>
+                                    <th>Mã mượn</th>
+                                    <th>Độc giả</th>
+                                    <th>Mã sách</th>
+                                    <th>Ng. mượn</th>
+                                    <th>Ng. trả</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-center">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="b in filtered" :key="b._id">
+                                    <td class="font-monospace text-primary">{{ b.MaMuon }}</td>
+                                    <td>{{ b.MaDocGia }}</td>
+                                    <td>{{ b.MaSach }}</td>
+                                    <td>{{ formatDate(b.NgayMuon) }}</td>
+                                    <td>{{ formatDate(b.NgayTra) }}</td>
+                                    <td>
+                                        <span :class="statusClass(b.TrangThai)">{{ b.TrangThai }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button v-if="b.TrangThai === 'ChoDuyet'"
+                                            @click="updateStatus(b.MaMuon, 'DaDuyet')"
+                                            class="btn btn-success btn-sm mb-1">Duyệt</button>
+                                        <button v-if="b.TrangThai === 'DaDuyet'"
+                                            @click="updateStatus(b.MaMuon, 'DaMuon')"
+                                            class="btn btn-info btn-sm mb-1">Cho mượn</button>
+                                        <button v-if="b.TrangThai === 'DaMuon'" @click="updateStatus(b.MaMuon, 'DaTra')"
+                                            class="btn btn-secondary btn-sm mb-1">Trả</button>
+                                        <button @click="remove(b.MaMuon)"
+                                            class="btn btn-danger btn-sm mb-1">Xóa</button>
+                                    </td>
+                                </tr>
+                                <tr v-if="!filtered.length">
+                                    <td colspan="7" class="text-center text-muted py-4">Chưa có phiếu mượn nào</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>

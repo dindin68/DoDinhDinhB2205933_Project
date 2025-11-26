@@ -2,6 +2,7 @@ const ApiError = require("../api-error");
 const ContactService = require("../services/contact.service");
 const MongoDB = require("../utils/mongodb.util");
 const { getNextCode } = require("../utils/code.util");
+const bcrypt = require("bcryptjs");
 
 exports.getAll = async (req, res) => {
   try {
@@ -20,7 +21,7 @@ exports.getOne = async (req, res) => {
     const db = client.db("library_db");
     const reader = await db
       .collection("DOCGIA")
-      .findOne({ MaDocGia: req.params.id });
+      .findOne({ MADOCGIA: req.params.id });
     if (!reader) return res.status(404).json({ message: "Reader not found" });
     res.json(reader);
   } catch (err) {
@@ -29,20 +30,68 @@ exports.getOne = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
+  let client;
   try {
-    const client = await MongoDB.connect(process.env.MONGO_URI);
+    client = await MongoDB.connect(process.env.MONGO_URI);
     const db = client.db("library_db");
     const readerData = { ...req.body };
-    if (!readerData.MaDocGia) {
-      readerData.MaDocGia = await getNextCode("DOCGIA", "DG", 3);
+
+    // Validate required fields
+    const required = ["HOLOT", "TEN", "DIENTHOAI", "DIACHI", "PASSWORD"];
+    const missing = required.filter(
+      (f) => !readerData[f] || readerData[f].toString().trim() === ""
+    );
+    if (missing.length) {
+      return res
+        .status(400)
+        .json({ message: `Thiếu trường: ${missing.join(", ")}` });
     }
+
+    // Hash password if provided before inserting
+    if (readerData.PASSWORD) {
+      try {
+        const hash = await bcrypt.hash(readerData.PASSWORD, 10);
+        readerData.PASSWORD = hash;
+      } catch (e) {
+        console.error("Failed to hash reader password:", e.message);
+      }
+    }
+
+    // Tạo MaDocGia với try-catch và upsert seq nếu cần
+    if (!readerData.MADOCGIA) {
+      try {
+        const result = await db
+          .collection("SEQ")
+          .findOneAndUpdate(
+            { _id: "DOCGIA" },
+            { $inc: { seq: 1 } },
+            { returnDocument: "after", upsert: true }
+          );
+
+        const seq = result.value.seq;
+        const paddedSeq = String(seq).padStart(3, "0");
+        readerData.MADOCGIA = "DG" + paddedSeq;
+      } catch (e) {
+        console.error("Lỗi tạo mã độc giả tự động:", e.message);
+        // fallback tạm thời mã độc giả
+        readerData.MADOCGIA = "DG" + Date.now();
+      }
+    }
+
     const result = await db.collection("DOCGIA").insertOne(readerData);
     const newReader = await db
       .collection("DOCGIA")
       .findOne({ _id: result.insertedId });
+
     res.status(201).json(newReader);
   } catch (err) {
     res.status(400).json({ message: err.message });
+  } finally {
+    if (client) {
+      try {
+        await client.close();
+      } catch (e) {}
+    }
   }
 };
 
@@ -54,12 +103,12 @@ exports.update = async (req, res) => {
     if (updateData._id) delete updateData._id;
     const result = await db
       .collection("DOCGIA")
-      .updateOne({ MaDocGia: req.params.id }, { $set: updateData });
+      .updateOne({ MADOCGIA: req.params.id }, { $set: updateData });
     if (result.matchedCount === 0)
       return res.status(404).json({ message: "Reader not found" });
     const updatedReader = await db
       .collection("DOCGIA")
-      .findOne({ MaDocGia: req.params.id });
+      .findOne({ MADOCGIA: req.params.id });
     res.json(updatedReader);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -72,22 +121,7 @@ exports.delete = async (req, res) => {
     const db = client.db("library_db");
     const result = await db
       .collection("DOCGIA")
-      .deleteOne({ MaDocGia: req.params.id });
-    if (result.deletedCount === 0)
-      return res.status(404).json({ message: "Reader not found" });
-    res.json({ message: "Deleted" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-exports.delete = async (req, res) => {
-  try {
-    const client = await MongoDB.connect(process.env.MONGO_URI);
-    const db = client.db("library_db");
-    const result = await db
-      .collection("DOCGIA")
-      .deleteOne({ MaDocGia: req.params.id });
+      .deleteOne({ MADOCGIA: req.params.id });
     if (result.deletedCount === 0)
       return res.status(404).json({ message: "Reader not found" });
     res.json({ message: "Deleted" });

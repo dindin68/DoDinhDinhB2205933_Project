@@ -6,4 +6,3 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 createApp(App).use(router).mount("#app");
-// createApp(App).mount("#app");

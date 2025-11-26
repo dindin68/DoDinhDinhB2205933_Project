@@ -9,8 +9,6 @@ import ReaderForm from "../views/readers/ReaderForm.vue";
 import PublisherList from "../views/publishers/PublisherList.vue";
 import PublisherForm from "../views/publishers/PublisherForm.vue";
 import AdminLogin from "../views/auth/AdminLogin.vue";
-import ReaderRegister from "../views/readers/ReaderRegister.vue";
-import ReaderLogin from "../views/readers/ReaderLogin.vue";
 
 const routes = [
   {
@@ -34,8 +32,6 @@ const routes = [
     ],
   },
   { path: "/admin/login", component: AdminLogin },
-  { path: "/reader/register", component: ReaderRegister },
-  { path: "/reader/login", component: ReaderLogin },
 ];
 
 const router = createRouter({
@@ -48,7 +44,7 @@ router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(
     (record) => record.meta && record.meta.requiresAuth
   );
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("admin_token");
   if (requiresAuth && !token) {
     return next({ path: "/admin/login", query: { redirect: to.fullPath } });
   }

@@ -34,7 +34,7 @@
                                     </td>
                                 </tr>
                                 <tr v-if="!publishers.length">
-                                    <td colspan="5" class="text-center text-muted py-4">
+                                    <td colspan="4" class="text-center text-muted py-4">
                                         Chưa có nhà xuất bản nào. Hãy thêm NXB đầu tiên!
                                     </td>
                                 </tr>
@@ -67,5 +67,5 @@ const deletePublisher = async (id) => {
     }
 }
 
-onMounted(fetch - publishers)
+onMounted(fetchPublishers)
 </script>

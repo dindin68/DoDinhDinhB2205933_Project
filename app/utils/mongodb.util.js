@@ -1,11 +1,11 @@
 const { MongoClient } = require("mongodb");
 
-class MongoDB {
-    static connect = async (uri) => {
-        if (this.client) return this.client;
-        this.client = await MongoClient.connect(uri);
-        return this.client;
-    };
-}
-
-module.exports = MongoDB;
+module.exports = {
+  connect: async (uri) => {
+    console.log("Connecting to MongoDB:", uri);
+    const client = new MongoClient(uri); // driver 4.x không cần useNewUrlParser/useUnifiedTopology
+    await client.connect();
+    console.log("MongoDB connected");
+    return client;
+  },
+};

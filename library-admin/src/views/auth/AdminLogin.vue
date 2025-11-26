@@ -1,31 +1,46 @@
 <template>
-    <div class="min-h-screen flex items-center justify-center bg-gray-50">
-        <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-            <h2 class="text-2xl font-bold mb-4 text-center">Đăng nhập Admin</h2>
+    <div class="d-flex align-items-center justify-content-center min-vh-100 bg-light">
+        <div class="card shadow-lg border-0" style="width: 420px; border-radius: 0.75rem;">
 
-            <form @submit.prevent="submit">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Số điện thoại</label>
-                    <input v-model="username" required class="w-full px-3 py-2 border rounded" />
-                </div>
+            <!-- Header Gradient -->
+            <div class="card-body text-white text-center"
+                style="background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899); border-radius: 0.75rem 0.75rem 0 0;">
+                <h3 class="mb-0 font-weight-bold">Đăng nhập Admin</h3>
+            </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-1">Mật khẩu</label>
-                    <input v-model="password" type="password" required class="w-full px-3 py-2 border rounded" />
-                </div>
+            <!-- Form -->
+            <div class="card-body">
+                <form @submit.prevent="submit">
 
-                <div v-if="error" class="text-sm text-red-600 mb-3">{{ error }}</div>
+                    <!-- Phone -->
+                    <div class="form-group">
+                        <label class="font-weight-semibold">Số điện thoại</label>
+                        <input v-model="username" required autocomplete="username" class="form-control" />
+                    </div>
 
-                <div class="flex items-center justify-between">
-                    <button class="bg-indigo-600 text-white px-4 py-2 rounded" :disabled="loading">
+                    <!-- Password -->
+                    <div class="form-group mt-3">
+                        <label class="font-weight-semibold">Mật khẩu</label>
+                        <input v-model="password" type="password" required autocomplete="current-password"
+                            class="form-control" />
+                    </div>
+
+                    <!-- Error -->
+                    <div v-if="error" class="text-danger small mt-2">
+                        {{ error }}
+                    </div>
+
+                    <!-- Buttons -->
+                    <button class="btn w-100 text-white py-2" :disabled="loading"
+                        style="background: blue; border-radius: .3rem;">
                         {{ loading ? 'Đang xử lý...' : 'Đăng nhập' }}
                     </button>
-                    <router-link to="/" class="text-sm text-gray-500">Quay lại</router-link>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </template>
+
 
 <script setup>
 import { ref } from 'vue'
@@ -58,7 +73,8 @@ const submit = async () => {
             return
         }
 
-        localStorage.setItem('token', token)
+        // store admin token under separate key to avoid collision with reader
+        localStorage.setItem('admin_token', token)
         localStorage.setItem('adminUser', JSON.stringify(employee || {}))
 
         const redirect = router.currentRoute.value.query.redirect || '/'

@@ -1,19 +1,48 @@
 <template>
-    <div class="container">
-        <h2>Đăng nhập</h2>
-        <form @submit.prevent="submit">
-            <div>
-                <label>Số điện thoại</label>
-                <input v-model="form.phone" required />
+    <div class="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+        <div class="card shadow-lg border-0" style="max-width: 420px; width: 100%; border-radius: 0.75rem;">
+
+            <!-- Header -->
+            <div class="card-header text-center text-white"
+                style="background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899); border-radius: 0.75rem 0.75rem 0 0;">
+                <h4 class="mb-0 font-weight-bold">Đăng nhập Độc giả</h4>
             </div>
-            <div>
-                <label>Mật khẩu</label>
-                <input type="password" v-model="form.password" required />
+
+            <!-- Form -->
+            <div class="card-body">
+                <form @submit.prevent="submit">
+
+                    <!-- Phone -->
+                    <div class="form-group">
+                        <label class="font-weight-semibold">Số điện thoại</label>
+                        <input v-model="form.DIENTHOAI" class="form-control" required autocomplete="username">
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group mt-3">
+                        <label class="font-weight-semibold">Mật khẩu</label>
+                        <input type="password" v-model="form.PASSWORD" class="form-control" required
+                            autocomplete="current-password">
+
+                    </div>
+
+                    <!-- Register link -->
+                    <div class="mt-2 mb-3">
+                        <router-link to="/register" class="text-secondary small">
+                            Bạn chưa có tài khoản? Đăng ký!
+                        </router-link>
+                    </div>
+
+                    <!-- Submit button -->
+                    <button class="btn w-100 text-white py-2" style="background: blue; border-radius: 6px;">
+                        Đăng nhập
+                    </button>
+                </form>
             </div>
-            <button>Đăng nhập</button>
-        </form>
+        </div>
     </div>
 </template>
+
 
 <script setup>
 import { reactive } from 'vue'
@@ -21,14 +50,14 @@ import api from '../api'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const form = reactive({ phone: '', password: '' })
+const form = reactive({ DIENTHOAI: '', PASSWORD: '' })
 
 const submit = async () => {
     try {
-        const res = await api.post('/auth/login', { phone: form.phone, password: form.password })
-        const { token, employee, message } = res.data
-        // Save token for reader flows; backend currently returns employee for admin, but token handling is shared
-        localStorage.setItem('token', token)
+        const res = await api.post('/auth/reader-login', { DIENTHOAI: form.DIENTHOAI, PASSWORD: form.PASSWORD })
+        const { token, reader, message } = res.data
+        // Save token under reader-specific key to avoid collision with admin
+        localStorage.setItem('reader_token', token)
         alert(message || 'Đăng nhập thành công')
         router.push('/')
     } catch (e) {
