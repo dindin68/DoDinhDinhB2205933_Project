@@ -6,7 +6,7 @@
                 <!-- Header + Controls -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="text-white font-weight-bold">Quản lý mượn sách</h2>
-                    <input v-model="q" @input="fetchBorrowings" type="text" class="form-control mr-2"
+                    <input v-model="q" @input="filterBorrowings" type="text" class="form-control mr-2"
                         placeholder="Tìm mã mượn, độc giả, sách..." />
                     <button @click="checkOverdue" class="btn btn-warning mr-2">Kiểm tra quá hạn</button>
                     <router-link to="/borrowings/create" class="btn btn-primary">Tạo phiếu mượn</router-link>
@@ -16,8 +16,7 @@
                 <div class="card shadow" style="border-radius: 0.5rem;">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0 align-middle text-center">
-                            <thead
-                                style="background: linear-gradient(90deg, #6366f1, #8b5cf6); color: white; border-radius: 1rem;">
+                            <thead style="background: linear-gradient(90deg, #6366f1, #8b5cf6); color: white;">
                                 <tr>
                                     <th>Mã mượn</th>
                                     <th>Độc giả</th>
@@ -40,15 +39,13 @@
                                     </td>
                                     <td class="text-center">
                                         <button v-if="b.TrangThai === 'ChoDuyet'"
-                                            @click="updateStatus(b.MaMuon, 'DaDuyet')"
+                                            @click="updateStatus(b._id, 'DaDuyet')"
                                             class="btn btn-success btn-sm mb-1">Duyệt</button>
-                                        <button v-if="b.TrangThai === 'DaDuyet'"
-                                            @click="updateStatus(b.MaMuon, 'DaMuon')"
+                                        <button v-if="b.TrangThai === 'DaDuyet'" @click="updateStatus(b._id, 'DaMuon')"
                                             class="btn btn-info btn-sm mb-1">Cho mượn</button>
-                                        <button v-if="b.TrangThai === 'DaMuon'" @click="updateStatus(b.MaMuon, 'DaTra')"
+                                        <button v-if="b.TrangThai === 'DaMuon'" @click="updateStatus(b._id, 'DaTra')"
                                             class="btn btn-secondary btn-sm mb-1">Trả</button>
-                                        <button @click="remove(b.MaMuon)"
-                                            class="btn btn-danger btn-sm mb-1">Xóa</button>
+                                        <button @click="remove(b._id)" class="btn btn-danger btn-sm mb-1">Xóa</button>
                                     </td>
                                 </tr>
                                 <tr v-if="!filtered.length">
@@ -70,6 +67,7 @@ import api from '@/api'
 const borrowings = ref([])
 const q = ref('')
 
+// Lấy danh sách phiếu mượn
 const fetchBorrowings = async () => {
     try {
         const res = await api.get('/borrowings')
@@ -80,10 +78,11 @@ const fetchBorrowings = async () => {
     }
 }
 
+// Kiểm tra quá hạn và cập nhật trực tiếp danh sách
 const checkOverdue = async () => {
     try {
-        await api.get('/borrowings/check-overdue')
-        await fetchBorrowings()
+        const res = await api.get('/borrowings/check-overdue')
+        borrowings.value = res.data   // cập nhật trực tiếp
         alert('Đã kiểm tra và cập nhật trạng thái quá hạn')
     } catch (err) {
         console.error(err)
@@ -91,26 +90,30 @@ const checkOverdue = async () => {
     }
 }
 
-const updateStatus = async (id, status) => {
+// Cập nhật trạng thái từng phiếu
+// Cập nhật trạng thái từng phiếu
+const updateStatus = async (_id, status) => {
     try {
-        await api.put(`/borrowings/${id}/trangthai`, { TrangThai: status })
-        await fetchBorrowings()
+        const res = await api.put(`/borrowings/${_id}/trangthai`, { TrangThai: status })
+        borrowings.value = borrowings.value.map(b => b._id === _id ? res.data : b)
     } catch (err) {
         console.error(err)
         alert('Lỗi cập nhật trạng thái')
     }
 }
 
-const remove = async (id) => {
+// Xóa phiếu mượn
+const remove = async (_id) => {
     if (!confirm('Xác nhận xóa phiếu mượn này?')) return
     try {
-        await api.delete(`/borrowings/${id}`)
-        await fetchBorrowings()
+        await api.delete(`/borrowings/${_id}`)
+        borrowings.value = borrowings.value.filter(b => b._id !== _id)
     } catch (err) {
         console.error(err)
         alert('Lỗi xóa')
     }
 }
+
 
 const formatDate = (d) => d ? new Date(d).toLocaleDateString() : ''
 
@@ -125,6 +128,7 @@ const statusClass = (s) => {
     }
 }
 
+// Lọc theo input tìm kiếm
 const filtered = computed(() => {
     if (!q.value) return borrowings.value
     const t = q.value.toLowerCase()

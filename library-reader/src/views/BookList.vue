@@ -1,23 +1,22 @@
 <template>
     <div class="home-page">
-
-
-
-        <!-- CONTENT -->
         <div class="container mt-4">
 
+            <!-- Loading -->
             <div v-if="loading" class="text-center py-5">
                 <div class="spinner-border text-primary"></div>
                 <p class="mt-2">Đang tải sách...</p>
             </div>
 
+            <!-- LIST SÁCH -->
             <div v-else class="row">
 
                 <div v-for="b in books" :key="b.MaSach || b._id" class="col-md-3 mb-4">
-                    <div class="card book-card shadow-lg border-0 h-100">
+                    <!-- CARD -->
+                    <div class="card book-card shadow-lg border-0 h-100" @click="goDetail(b)">
 
                         <!-- Ảnh sách -->
-                        <img :src="apiBase + b.ImageUrl" alt="Ảnh sách" class="book-img mx-auto d-block">
+                        <img :src="apiBase + b.ImageUrl" alt="Ảnh sách" class="book-img mx-auto d-block" />
 
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title text-primary font-weight-bold">
@@ -25,14 +24,17 @@
                             </h5>
 
                             <p class="text-muted mb-2">
-                                Nhà Xuất Bản: <strong>{{ b.MaSach }}</strong>
+                                Mã sách: <strong>{{ b.MaSach }}</strong>
                             </p>
+
                             <p class="text-muted mb-2">
                                 Tác giả: <strong>{{ b.TacGia }}</strong>
                             </p>
 
-                            <router-link :to="`/books/${b.MaSach || b._id}`" class="btn btn-gradient mt-auto">
-                                Xem chi tiết
+                            <!-- NÚT ĐĂNG KÝ MƯỢN -->
+                            <router-link :to="`/borrow/${b.MaSach || b._id}`" class="btn btn-gradient mt-auto"
+                                @click.stop>
+                                Đăng ký mượn
                             </router-link>
                         </div>
 
@@ -47,11 +49,16 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import api from "../api";
 
 const books = ref([]);
+const router = useRouter()
 const loading = ref(true);
 const apiBase = "http://localhost:3000"; // BASE URL backend
+const goDetail = (b) => {
+    router.push(`/books/${b.MaSach || b._id}`);
+};
 
 const load = async () => {
     loading.value = true;

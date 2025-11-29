@@ -5,10 +5,12 @@ const borrowingController = require("../controllers/borrowing.controller");
 router.get("/", borrowingController.getAll);
 // Route mới: Kiểm tra và cập nhật trạng thái tự động
 router.get("/check-overdue", borrowingController.checkOverdueStatus);
+// place '/me' before '/:id' to prevent route param collision
+router.get("/me", borrowingController.getMyBorrowings);
 router.get("/:id", borrowingController.getOne);
 router.post("/", borrowingController.create);
 // Route mới: Cập nhật trạng thái theo quy trình
-router.put("/:maMuon/trangthai", borrowingController.updateStatus);
+router.put("/:id/trangthai", borrowingController.updateStatus);
 router.put("/:id", borrowingController.update);
 router.delete("/:id", borrowingController.delete);
 

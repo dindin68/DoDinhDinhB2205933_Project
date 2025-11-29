@@ -3,8 +3,10 @@
         <!-- Header -->
         <nav class="navbar navbar-expand-lg"
             style="background: linear-gradient(90deg, #4f46e5, #8b5cf6); box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.3);">
-            <div class="container d-flex justify-content-between align-items-center py-4">
-                <h1 class="text-white font-weight-bold">Quản Lý Thư Viện</h1>
+            <div class="container">
+                <router-link class="navbar-brand font-weight-bold text-white" to="/">
+                    Quản lý thư viện
+                </router-link>
                 <nav class="d-flex align-items-center">
                     <router-link to="/books" class="nav-link text-white mx-2 hover-scale">Sách</router-link>
                     <router-link to="/readers" class="nav-link text-white mx-2 hover-scale">Độc giả</router-link>
@@ -13,7 +15,7 @@
                     <div class="ml-3">
                         <button v-if="!isLogged" @click="goLogin" class="btn btn-outline-light">Đăng nhập</button>
                         <div v-else class="d-flex align-items-center">
-                            <span class="text-white mr-3">Xin chào</span>
+                            <span class="text-white mr-3">Xin chào {{ TEN }}</span>
                             <button @click="logout" class="btn btn-outline-light">Đăng xuất</button>
                         </div>
                     </div>

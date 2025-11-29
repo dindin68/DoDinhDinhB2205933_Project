@@ -47,9 +47,9 @@
                                     <i class="fa fa-user mr-2"></i> Thông tin tài khoản
                                 </router-link> -->
 
-                                <!-- <router-link class="dropdown-item" to="/reader/borrowed">
+                                <router-link class="dropdown-item" to="/my-borrowings">
                                     <i class="fa fa-book mr-2"></i> Theo dõi mượn sách
-                                </router-link> -->
+                                </router-link>
 
                                 <div class="dropdown-divider"></div>
 
