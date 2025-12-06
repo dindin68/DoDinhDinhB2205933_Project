@@ -30,6 +30,10 @@
                             <p class="text-muted mb-2">
                                 Tác giả: <strong>{{ b.TacGia }}</strong>
                             </p>
+                            <p class="text-muted mb-2">
+                                NXB: <strong>{{ b.TENNXB || b.NhaXuatBan?.TENNXB || 'Đang cập nhật' }}</strong>
+                            </p>
+
 
                             <!-- NÚT ĐĂNG KÝ MƯỢN -->
                             <router-link :to="`/borrow/${b.MaSach || b._id}`" class="btn btn-gradient mt-auto"

@@ -3,7 +3,7 @@ const MongoDB = require("../utils/mongodb.util");
 const { getNextCode } = require("../utils/code.util");
 const { ObjectId } = require("mongodb");
 
-// Lấy tất cả borrowings
+// 1. Lấy tất cả borrowings
 exports.getAll = async (req, res) => {
   let client;
   try {
@@ -18,7 +18,7 @@ exports.getAll = async (req, res) => {
   }
 };
 
-// Lấy 1 borrowing theo _id
+// 2. Lấy 1 borrowing theo _id
 exports.getOne = async (req, res) => {
   let client;
   try {
@@ -37,7 +37,7 @@ exports.getOne = async (req, res) => {
   }
 };
 
-// Tạo borrowing mới
+// 3. Tạo borrowing mới
 exports.create = async (req, res) => {
   let client;
   try {
@@ -94,7 +94,7 @@ exports.create = async (req, res) => {
   }
 };
 
-// Update borrowing theo _id
+// 4. Update borrowing theo _id (Cập nhật thông tin chung)
 exports.update = async (req, res) => {
   let client;
   try {
@@ -121,7 +121,7 @@ exports.update = async (req, res) => {
   }
 };
 
-// Xóa borrowing theo _id
+// 5. Xóa borrowing theo _id
 exports.delete = async (req, res) => {
   let client;
   try {
@@ -141,7 +141,7 @@ exports.delete = async (req, res) => {
   }
 };
 
-// Cập nhật trạng thái theo quy trình (dựa trên _id)
+// 6. Cập nhật trạng thái (Duyệt, Mượn, Trả) - Đã Đơn Giản Hóa
 exports.updateStatus = async (req, res) => {
   let client;
   try {
@@ -150,91 +150,57 @@ exports.updateStatus = async (req, res) => {
     const id = req.params.id;
     const { TrangThai } = req.body;
 
-    const validStatuses = ["ChoDuyet", "DaDuyet", "DaMuon", "DaTra", "QuaHan"];
-    if (!validStatuses.includes(TrangThai)) {
-      return res.status(400).json({ message: "Invalid status." });
-    }
-
     const borrowing = await db
       .collection("THEODOIMUONSACH")
       .findOne({ _id: new ObjectId(id) });
 
-    if (!borrowing)
-      return res.status(404).json({ message: "Borrowing not found" });
+    if (!borrowing) return res.status(404).json({ message: "Not found" });
 
-    // Quy trình trạng thái
+    // Đối tượng cập nhật cơ bản
+    const updateFields = { TrangThai: TrangThai, NgayCapNhat: new Date() };
+
+    let isValid = false;
+
     switch (borrowing.TrangThai) {
       case "ChoDuyet":
-        if (TrangThai !== "DaDuyet")
-          return res
-            .status(400)
-            .json({ message: "Can only update from ChoDuyet to DaDuyet." });
+        if (TrangThai === "DaDuyet") isValid = true;
         break;
+
       case "DaDuyet":
-        if (TrangThai !== "DaMuon")
-          return res
-            .status(400)
-            .json({ message: "Can only update from DaDuyet to DaMuon." });
+        if (TrangThai === "DaMuon") isValid = true;
         break;
+
+      // ✅ ĐƠN GIẢN HÓA: Dù là Đang Mượn hay Quá Hạn, chỉ cần bấm TRẢ là cho phép
       case "DaMuon":
-        if (TrangThai !== "DaTra")
-          return res
-            .status(400)
-            .json({ message: "Can only update from DaMuon to DaTra." });
+      case "QuaHan":
+        if (TrangThai === "DaTra") {
+          isValid = true;
+          updateFields.NgayTraThucTe = new Date(); // Ghi nhận ngày trả
+        }
         break;
+
+      case "DaTra":
+        isValid = false;
+        break;
+
       default:
-        return res
-          .status(400)
-          .json({ message: "Cannot update status from current state." });
+        isValid = false;
+        break;
+    }
+
+    if (!isValid) {
+      return res
+        .status(400)
+        .json({ message: "Trạng thái chuyển đổi không hợp lệ." });
     }
 
     await db
       .collection("THEODOIMUONSACH")
-      .updateOne({ _id: new ObjectId(id) }, { $set: { TrangThai } });
-
-    const updatedBorrowing = await db
+      .updateOne({ _id: new ObjectId(id) }, { $set: updateFields });
+    const updated = await db
       .collection("THEODOIMUONSACH")
       .findOne({ _id: new ObjectId(id) });
-    res.json(updatedBorrowing);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ message: err.message });
-  } finally {
-    if (client) await client.close();
-  }
-};
-
-// Cập nhật trạng thái quá hạn
-exports.checkOverdueStatus = async (req, res) => {
-  let client;
-  try {
-    client = await MongoDB.connect(process.env.MONGO_URI);
-    const db = client.db("library_db");
-
-    const currentDate = new Date();
-    const borrowings = await db
-      .collection("THEODOIMUONSACH")
-      .find({ TrangThai: "DaMuon" })
-      .toArray();
-
-    const updates = borrowings
-      .filter((b) => b.NgayTra && new Date(b.NgayTra) < currentDate)
-      .map((b) =>
-        db
-          .collection("THEODOIMUONSACH")
-          .updateOne(
-            { _id: new ObjectId(b._id) },
-            { $set: { TrangThai: "QuaHan" } }
-          )
-      );
-
-    await Promise.all(updates);
-
-    const updatedBorrowings = await db
-      .collection("THEODOIMUONSACH")
-      .find()
-      .toArray();
-    res.json(updatedBorrowings);
+    res.json(updated);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });
@@ -242,6 +208,28 @@ exports.checkOverdueStatus = async (req, res) => {
     if (client) await client.close();
   }
 };
+
+// 7. Cập nhật trạng thái quá hạn (DUMMY - Để tránh lỗi Route)
+// Hàm này chỉ trả về danh sách, không còn tự động cập nhật sang 'QuaHan' nữa
+exports.checkOverdueStatus = async (req, res) => {
+  let client;
+  try {
+    client = await MongoDB.connect(process.env.MONGO_URI);
+    const db = client.db("library_db");
+
+    // Chỉ trả về danh sách hiện tại, không làm gì cả
+    const borrowings = await db.collection("THEODOIMUONSACH").find().toArray();
+
+    res.json(borrowings);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  } finally {
+    if (client) await client.close();
+  }
+};
+
+// 8. Lấy danh sách mượn của tôi (Cho Reader)
 exports.getMyBorrowings = async (req, res) => {
   let client;
   try {
@@ -265,7 +253,7 @@ exports.getMyBorrowings = async (req, res) => {
 
     const borrowings = await db
       .collection("THEODOIMUONSACH")
-      .find({ MaDocGia: payload.id }) // chỉ lấy phiếu của reader
+      .find({ MaDocGia: payload.id })
       .toArray();
 
     res.json(borrowings);

@@ -18,9 +18,15 @@
 
                 <div class="info">
                     <p><span class="label">Mã sách:</span> {{ book.MaSach || book.code }}</p>
-                    <p><span class="label">Tác giả:</span> <span class="author">{{ book.TacGia || book.author
-                            }}</span>
+                    <p><span class="label">Tác giả:</span> <span class="author">{{ book.TacGia || book.author }}</span>
                     </p>
+                    <p>
+                        <span class="label">Nhà xuất bản:</span>
+                        <span class="author">
+                            {{ book.TENNXB || book.NhaXuatBan?.TENNXB || 'Đang cập nhật' }}
+                        </span>
+                    </p>
+
                     <router-link :to="`/borrow/${book.MaSach || book._id}`" class="borrow-btn" @click.stop>
                         Đăng ký mượn
                     </router-link>

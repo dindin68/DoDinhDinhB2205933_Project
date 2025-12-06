@@ -227,7 +227,7 @@ exports.getOne = async (req, res) => {
         },
         {
           $addFields: {
-            TENNXB: "$NXBInfo.TenNXB", // Sửa: Giả định trường NXB là TenNXB
+            TENNXB: "$NXBInfo.TENNXB", // Sửa: Giả định trường NXB là TenNXB
           },
         },
         {
