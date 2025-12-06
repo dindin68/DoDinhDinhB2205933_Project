@@ -1,11 +1,13 @@
 <template>
-    <div class="page-wrapper">
-        <button @click="$router.back()" class="back-btn">← Quay lại</button>
-
+    <div class="position-absolute mt-3 ml-3">
+        <button @click="$router.back()" class="btn btn-outline-light btn-sm shadow back-btn">
+            ← Quay lại
+        </button>
+    </div>
+    <div class="page d-flex justify-content-center align-items-center">
         <div v-if="loading" class="status-box">
             Đang tải...
         </div>
-
         <div v-else-if="book" class="detail-card">
             <h2 class="title">{{ book.TenSach || book.title }}</h2>
 
@@ -16,12 +18,13 @@
 
                 <div class="info">
                     <p><span class="label">Mã sách:</span> {{ book.MaSach || book.code }}</p>
-                    <p><span class="label">Tác giả:</span> <span class="author">{{ book.TacGia || book.author }}</span>
+                    <p><span class="label">Tác giả:</span> <span class="author">{{ book.TacGia || book.author
+                            }}</span>
                     </p>
-
-                    <router-link :to="`/borrow/${book._id}`" class="borrow-btn">
-                        Đăng kí mượn
+                    <router-link :to="`/borrow/${book.MaSach || book._id}`" class="borrow-btn" @click.stop>
+                        Đăng ký mượn
                     </router-link>
+
                 </div>
             </div>
         </div>
@@ -32,25 +35,25 @@
     </div>
 </template>
 
-
 <script setup>
 import { ref, onMounted } from 'vue'
-import api from '../api' // Đảm bảo đường dẫn này đúng
+import api from '../api'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const book = ref(null)
-const loading = ref(false)
-const apiBase = "http://localhost:3000"; // BASE URL backend
-
+const loading = ref(true)
+const apiBase = "http://localhost:3000"
 
 const load = async () => {
     loading.value = true
     try {
-        const res = await api.get(`/books/${route.params.id}`)
+        const id = route.params.id   // lấy ID từ URL
+        const res = await api.get(`/books/${id}`)
         book.value = res.data
-    } catch (e) {
-        console.error("Lỗi khi tải chi tiết sách:", e)
+    } catch (err) {
+        console.error(err)
+        alert("Lỗi khi tải thông tin sách!")
     } finally {
         loading.value = false
     }
@@ -59,101 +62,104 @@ const load = async () => {
 onMounted(load)
 </script>
 
+
 <style scoped>
+/* === VARIABLES === */
+:root {
+    --gradient: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+    --primary: #6d28d9;
+    --white: #fff;
+    --text: #1f2937;
+}
+
+.page {
+    border-radius: 10px;
+    padding: 2%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+}
+
+/* === PAGE LAYOUT === */
 .page-wrapper {
     max-width: 900px;
-    margin: 20px auto;
+    margin: 0 auto;
     padding: 20px;
     min-height: 90vh;
-    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--white);
 }
 
-/* === BUTTONS === */
-.back-btn,
-.borrow-btn {
-    padding: 8px 16px;
-    border-radius: 40px;
-    font-size: 15px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: 0.25s;
-    text-decoration: none;
-}
-
-.back-btn {
-    background: none;
-    border: 2px solid #8b5cf6;
-    color: #6d28d9;
-}
-
-.back-btn:hover {
-    background: var(--gradient);
-    color: #fff;
-    border-color: transparent;
-    transform: translateY(-2px);
-}
-
-.borrow-btn {
-    display: inline-block;
-    margin-top: 20px;
-    padding: 12px 28px;
-    background: var(--gradient);
-    color: white;
-    border-radius: 12px;
-    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
-}
-
-.borrow-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(139, 92, 246, 0.35);
-}
-
-/* CARD */
+/* === DETAIL CARD === */
 .detail-card {
+    width: 100%;
+    max-width: 800px;
     background: var(--white);
     padding: 30px;
     border-radius: 18px;
-    margin-top: 20px;
     box-shadow: 0 12px 28px rgba(99, 102, 241, 0.12);
     animation: fadeIn 0.5s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
+/* === TITLE === */
 .title {
-    font-size: 2.1rem;
+    font-size: 2.2rem;
     margin-bottom: 25px;
-    font-weight: 800;
-    background: var(--gradient);
+    font-weight: 900;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
+    color: transparent;
+
+    /* làm chữ nét hơn */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* giữ shadow nhưng giảm opacity */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.15);
+
+    text-align: center;
 }
 
-/* CONTENT */
+/* === CONTENT === */
 .content {
     display: flex;
     gap: 35px;
     flex-wrap: wrap;
-    align-items: flex-start;
+    justify-content: center;
+    /* căn giữa ngang */
+    align-items: center;
+    /* căn giữa dọc */
+    width: auto;
+    /* cho content co theo nội dung */
 }
 
+/* === IMAGE BOX === */
 .img-box {
     width: 220px;
     border-radius: 15px;
     overflow: hidden;
     border: 3px solid #8b5cf6;
     box-shadow: 0 8px 18px rgba(139, 92, 246, 0.25);
-    flex-shrink: 0;
     background: white;
+    flex-shrink: 0;
 }
 
 .img-box img {
     width: 100%;
+    display: block;
 }
 
+/* === INFO === */
 .info {
-    flex: 1;
     font-size: 1.1rem;
     color: var(--text);
     min-width: 250px;
+    max-width: 400px;
 }
 
 .info p {
@@ -170,7 +176,40 @@ onMounted(load)
     color: #7c3aed;
 }
 
-/* STATUS */
+/* === BUTTONS === */
+
+.borrow-btn {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 12px 28px;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+    color: white !important;
+    font-weight: 600;
+    border: 2px solid #8b5cf6;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+    text-decoration: none;
+}
+
+.borrow-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(139, 92, 246, 0.35);
+}
+
+.back-btn {
+    background: white;
+    border-radius: 40px;
+    border: 2px solid #8b5cf6;
+    color: #6d28d9;
+    margin-bottom: 20px;
+}
+
+.back-btn:hover {
+    border-color: transparent;
+    transform: translateY(-2px);
+}
+
+/* === STATUS BOX === */
 .status-box {
     text-align: center;
     padding: 40px;
@@ -181,18 +220,8 @@ onMounted(load)
     margin-top: 25px;
 }
 
-/* RESPONSIVE */
+/* === RESPONSIVE === */
 @media (max-width: 768px) {
-    .page-wrapper {
-        max-width: 95%;
-        padding: 12px;
-    }
-
-    .title {
-        font-size: 1.8rem;
-        text-align: center;
-    }
-
     .content {
         flex-direction: column;
         gap: 20px;
@@ -207,6 +236,10 @@ onMounted(load)
     .borrow-btn {
         width: 100%;
         max-width: 250px;
+    }
+
+    .title {
+        font-size: 1.8rem;
     }
 }
 
@@ -234,7 +267,7 @@ onMounted(load)
     }
 }
 
-/* ANIMATION */
+/* === ANIMATION === */
 @keyframes fadeIn {
     from {
         opacity: 0;

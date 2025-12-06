@@ -45,6 +45,43 @@
                     </div>
 
                     <div class="form-group mb-4">
+                        <label class="font-weight-bold">Nhà xuất bản</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-building"></i></span>
+                            </div>
+                            <select v-model="book.NhaXuatBan" class="form-control form-control-lg" required>
+                                <option value="" disabled>-- Chọn Nhà Xuất Bản --</option>
+                                <option v-for="publisher in publishers" :key="publisher._id" :value="publisher._id">
+                                    {{ publisher.TENNXB }}
+                                </option>
+                                <option value="new">-- Thêm Nhà Xuất Bản Mới --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4" v-if="book.NhaXuatBan === 'new'">
+                        <label class="font-weight-bold">Tên Nhà Xuất Bản Mới</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-edit"></i></span>
+                            </div>
+                            <input v-model="newPublisherName" type="text" class="form-control form-control-lg"
+                                placeholder="Nhập tên Nhà Xuất Bản mới..." required>
+                        </div>
+                    </div>
+                    <div class="form-group mb-4" v-if="book.NhaXuatBan === 'new'">
+                        <label class="font-weight-bold">Địa chỉ Nhà Xuất Bản</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                            </div>
+                            <input v-model="newPublisherAddress" type="text" class="form-control form-control-lg"
+                                placeholder="Nhập địa chỉ NXB mới..." required>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
                         <label class="font-weight-bold">Năm xuất bản</label>
                         <div class="input-group">
                             <div class="input-group-prepend">
@@ -64,7 +101,7 @@
                         <button type="button" @click="$router.go(-1)" class="btn btn-secondary btn-lg mr-3">
                             <i class="fas fa-times mr-1"></i> Hủy
                         </button>
-                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                        <button type="submit" class="btn btn-primary btn-lg px-5" :disabled="isSaving">
                             <i class="fas fa-save mr-1"></i> Lưu
                         </button>
                     </div>
@@ -76,40 +113,129 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/api'
+
 
 const route = useRoute()
 const router = useRouter()
 const isEdit = route.params.id !== undefined
+const isSaving = ref(false)
 
+
+
+// 1. DATA CƠ BẢN CỦA SÁCH
 const book = ref({
     MaSach: '',
     TenSach: '',
     TacGia: '',
-    NamXuatBan: ''
+    NamXuatBan: '',
+    // Sử dụng tên trường trong template (NhaXuatBan) để bind dữ liệu
+    NhaXuatBan: ''
 })
+// Watch để reset tên NXB mới khi người dùng đổi lựa chọn
 
+watch(() => book.value.NhaXuatBan, (val) => {
+    if (val === 'new') {
+        newPublisherName.value = ''
+        newPublisherAddress.value = ''
+    }
+})
 const imageFile = ref(null)
 const handleFileUpload = (e) => { imageFile.value = e.target.files[0] }
 
-const fetchBook = async () => {
-    if (isEdit) {
-        const res = await api.get(`/books/${route.params.id}`)
-        book.value = res.data
+// 2. DATA VỀ NHÀ XUẤT BẢN
+const publishers = ref([]) // Danh sách NXB được tải từ API
+const newPublisherName = ref('')
+const newPublisherAddress = ref('') // Tên NXB mới nếu người dùng chọn 'Thêm mới'
+
+// 3. HÀM TẢI DANH SÁCH NXB
+const fetchPublishers = async () => {
+    try {
+        // Giả sử API endpoint để lấy danh sách NXB là /publishers
+        const res = await api.get('/publishers')
+        publishers.value = res.data
+    } catch (error) {
+        console.error('Lỗi khi tải danh sách Nhà Xuất Bản:', error)
     }
 }
 
+const fetchBook = async () => {
+    if (isEdit) {
+        try {
+            const res = await api.get(`/books/${route.params.id}`)
+            // Gán dữ liệu sách. Giả sử API trả về ID NXB trong trường NhaXuatBan
+            book.value = res.data
+        } catch (err) {
+            console.error('Lỗi khi tải dữ liệu sách:', err)
+        }
+    }
+}
+
+const createNewPublisher = async (name) => {
+    try {
+        // 🚨 CHÚ Ý: Gửi cả TENNXB và DIACHI lên Backend
+        const res = await api.post('/publishers', {
+            TENNXB: name,
+            DIACHI: newPublisherAddress.value // ✅ Gửi trường DIACHI
+        })
+
+        // ... (logic kiểm tra và trả về _id giữ nguyên)
+        if (res.data && res.data._id) {
+            return res.data._id
+        } else {
+            console.error('API tạo NXB thành công nhưng thiếu _id:', res.data);
+            throw new Error('API server không trả về ID Nhà Xuất Bản mới.');
+        }
+
+    } catch (error) {
+        console.error('Lỗi khi tạo Nhà Xuất Bản mới:', error)
+        throw new Error(error.response?.data?.message || 'Không thể tạo Nhà Xuất Bản mới.')
+    }
+}
+
+// 5. HÀM LƯU SÁCH ĐÃ ĐIỀU CHỈNH (CÓ THAY ĐỔI)
 const saveBook = async () => {
     try {
         const formData = new FormData()
         formData.append('MaSach', book.value.MaSach)
         formData.append('TenSach', book.value.TenSach)
         formData.append('TacGia', book.value.TacGia)
-        formData.append('NamXuatBan', book.value.NamXuatBan)
+        formData.append('NamXuatBan', Number(book.value.NamXuatBan))
+
+        let publisherIdToSave = typeof book.value.NhaXuatBan === 'object'
+            ? book.value.NhaXuatBan._id
+            : book.value.NhaXuatBan
+
+
+
+        // 🌟 LOGIC CHÍNH: KIỂM TRA VÀ TẠO NXB MỚI 🌟
+        // ...
+        if (book.value.NhaXuatBan === 'new') {
+            if (!newPublisherName.value) {
+                alert('Vui lòng nhập tên Nhà xuất bản mới.')
+                return
+            }
+
+            try {
+                // BƯỚC 1: Gọi API để tạo NXB mới và lấy ID
+                const newId = await createNewPublisher(newPublisherName.value)
+                publisherIdToSave = newId // Sử dụng ID NXB mới tạo
+            } catch (error) {
+                // Nếu createNewPublisher throw lỗi, catch sẽ bắt và hiển thị
+                alert(error.message);
+                return; // 🌟 QUAN TRỌNG: DỪNG LẠI NẾU TẠO NXB THẤT BẠI
+            }
+        }
+
+        // 🚨 BƯỚC 2: Gửi ID của NXB đã có hoặc ID mới tạo đi
+        // Sử dụng MANXB để map với collection SACH
+        formData.append('MANXB', publisherIdToSave || '')
+
         if (imageFile.value) formData.append('image', imageFile.value)
 
+        // ... (Giữ nguyên logic PUT/POST) ...
         if (isEdit) {
             await api.put(`/books/${route.params.id}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -122,11 +248,14 @@ const saveBook = async () => {
 
         router.push('/books')
     } catch (err) {
-        alert(err.response?.data?.message || 'Lỗi lưu sách')
+        alert(err.response?.data?.message || 'Lỗi lưu sách. Vui lòng kiểm tra dữ liệu nhập.')
     }
 }
 
-onMounted(fetchBook)
+onMounted(() => {
+    fetchPublishers() // Tải danh sách NXB khi component được tạo
+    fetchBook()
+})
 </script>
 
 <style scoped>

@@ -58,6 +58,7 @@ const submit = async () => {
         const { token, reader, message } = res.data
         // Save token under reader-specific key to avoid collision with admin
         localStorage.setItem('reader_token', token)
+        localStorage.setItem('readerUser', JSON.stringify(reader || {}))
         alert(message || 'Đăng nhập thành công')
         router.push('/')
     } catch (e) {

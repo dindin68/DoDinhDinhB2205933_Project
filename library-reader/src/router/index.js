@@ -6,6 +6,7 @@ import Register from "../views/Register.vue";
 import Login from "../views/Login.vue";
 import BorrowForm from "../views/BorrowForm.vue";
 import MyBorrowings from "../views/MyBorrowings.vue";
+import Profile from "../views/Profile.vue";
 
 const routes = [
   {
@@ -20,6 +21,7 @@ const routes = [
       { path: "/login", component: Login },
       { path: "/borrow/:bookId", component: BorrowForm, props: true },
       { path: "/my-borrowings", component: MyBorrowings },
+      { path: "/profile", component: Profile },
     ],
   },
 ];

@@ -23,13 +23,13 @@
                             </thead>
                             <tbody>
                                 <tr v-for="publisher in publishers" :key="publisher._id">
-                                    <td><strong>{{ publisher.MaNXB }}</strong></td>
-                                    <td class="font-weight-bold">{{ publisher.TenNXB }}</td>
-                                    <td>{{ publisher.DiaChi }}</td>
+                                    <td><strong>{{ publisher.MANXB }}</strong></td>
+                                    <td class="font-weight-bold">{{ publisher.TENNXB }}</td>
+                                    <td>{{ publisher.DIACHI }}</td>
                                     <td class="text-center">
-                                        <button @click="$router.push(`/publishers/edit/${publisher.MaNXB}`)"
+                                        <button @click="$router.push(`/publishers/edit/${publisher.MANXB}`)"
                                             class="btn btn-warning btn-sm mr-2">Sửa</button>
-                                        <button @click="deletePublisher(publisher.MaNXB)"
+                                        <button @click="deletePublisher(publisher.MANXB)"
                                             class="btn btn-danger btn-sm">Xóa</button>
                                     </td>
                                 </tr>

@@ -17,11 +17,12 @@
                         <table class="table table-hover mb-0 align-middle text-center">
                             <thead
                                 style="background: linear-gradient(90deg, #6366f1, #8b5cf6); color: white; border-radius: 1rem;">
-                                <tr>
+                                <tr class="text-center">
                                     <th>Mã sách</th>
                                     <th>Ảnh</th>
                                     <th>Tên sách</th>
                                     <th>Tác giả</th>
+                                    <th>NXB</th>
                                     <th class="text-center">Năm XB</th>
                                     <th class="text-center">Hành động</th>
                                 </tr>
@@ -35,6 +36,7 @@
                                     </td>
                                     <td class="font-weight-semibold">{{ b.TenSach }}</td>
                                     <td>{{ b.TacGia }}</td>
+                                    <td>{{ b.TENNXB }}</td>
                                     <td class="text-center">{{ b.NamXuatBan }}</td>
                                     <td class="text-center">
                                         <button @click="$router.push(`/books/edit/${b.MaSach}`)"

@@ -17,7 +17,7 @@
                     <!-- Mã NXB (chỉ hiển thị khi edit) -->
                     <div v-if="isEdit" class="form-group mb-4">
                         <label class="font-weight-bold">Mã NXB</label>
-                        <input v-model="publisher.MaNXB" type="text" class="form-control form-control-lg" disabled>
+                        <input v-model="publisher.MANXB" type="text" class="form-control form-control-lg" disabled>
                     </div>
 
                     <!-- Tên NXB -->
@@ -27,7 +27,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="fas fa-edit"></i></span>
                             </div>
-                            <input v-model="publisher.TenNXB" type="text" class="form-control form-control-lg" required>
+                            <input v-model="publisher.TENNXB" type="text" class="form-control form-control-lg" required>
                         </div>
                     </div>
 
@@ -38,7 +38,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
                             </div>
-                            <input v-model="publisher.DiaChi" type="text" class="form-control form-control-lg">
+                            <input v-model="publisher.DIACHI" type="text" class="form-control form-control-lg">
                         </div>
                     </div>
 
@@ -67,9 +67,9 @@ const route = useRoute()
 const router = useRouter()
 const isEdit = route.params.id !== undefined
 const publisher = ref({
-    MaNXB: '',
-    TenNXB: '',
-    DiaChi: ''
+    MANXB: '',
+    TENNXB: '',
+    DIACHI: ''
 })
 
 const fetchPublisher = async () => {
@@ -82,7 +82,7 @@ const fetchPublisher = async () => {
 const errorMsg = ref('')
 const savePublisher = async () => {
     errorMsg.value = ''
-    if (!publisher.value.TenNXB || publisher.value.TenNXB.trim() === '') {
+    if (!publisher.value.TENNXB || publisher.value.TENNXB.trim() === '') {
         errorMsg.value = "Vui lòng nhập tên nhà xuất bản"
         return
     }

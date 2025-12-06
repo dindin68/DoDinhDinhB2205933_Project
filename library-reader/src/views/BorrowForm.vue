@@ -1,23 +1,48 @@
 <template>
-    <div class="page">
-        <h2>Yêu cầu mượn</h2>
-        <div v-if="!book">Đang tải sách...</div>
-        <div v-else>
-            <p>Đang mượn: {{ book.TenSach || book.title }}</p>
-            <form @submit.prevent="submit">
-                <div>
-                    <label>Ngày mượn</label>
-                    <input type="date" v-model="form.NgayMuon" required />
-                </div>
-                <div>
-                    <label>Ngày trả dự kiến</label>
-                    <input type="date" v-model="form.NgayTra" required />
-                </div>
-                <button>Gửi yêu cầu</button>
-            </form>
+    <div class="position-absolute mt-3 ml-3">
+        <button @click="$router.back()" class="btn btn-outline-light btn-sm shadow back-btn">
+            ← Quay lại
+        </button>
+    </div>
+    <div class="page d-flex justify-content-center align-items-center">
+        <div class="card shadow-lg p-4 w-100 borrow-card">
+
+            <h3 class="text-center mb-4 title-gradient">
+                Yêu cầu mượn sách
+            </h3>
+
+            <div v-if="!book" class="text-center text-muted">
+                Đang tải thông tin sách...
+            </div>
+
+            <div v-else>
+                <p class="font-weight-bold mb-3">
+                    Sách:
+                    <span class="text-primary">
+                        {{ book.TenSach || book.title }}
+                    </span>
+                </p>
+
+                <form @submit.prevent="submit">
+                    <div class="form-group">
+                        <label>Ngày mượn</label>
+                        <input type="date" class="form-control" v-model="form.NgayMuon" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ngày trả dự kiến</label>
+                        <input type="date" class="form-control" v-model="form.NgayTra" required />
+                    </div>
+
+                    <button class="btn btn-gradient btn-block mt-3">
+                        Gửi yêu cầu
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue'
@@ -65,21 +90,69 @@ const submit = async () => {
 
 <style scoped>
 .page {
-    max-width: 700px;
-    margin: 24px auto
+    border-radius: 10px;
+    padding: 2%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
 }
 
-input {
-    width: 100%;
-    padding: 8px;
-    margin: 6px 0
+.borrow-card {
+    max-width: 480px;
+    border-radius: 16px;
+    animation: fadeIn 0.4s ease;
 }
 
-button {
-    padding: 8px 12px;
-    background: #ef4444;
-    color: white;
+/* Tiêu đề gradient */
+.title-gradient {
+    font-weight: 800;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Button gradient */
+.btn-gradient {
     border: none;
-    border-radius: 4px
+    color: #fff;
+    font-weight: bold;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+    transition: 0.3s;
+}
+
+.btn-gradient:hover {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* Input focus đẹp hơn Bootstrap mặc định */
+.form-control:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 0.2rem rgba(139, 92, 246, 0.25);
+}
+
+.back-btn {
+    background: white;
+    border-radius: 40px;
+    border: 2px solid #8b5cf6;
+    color: #6d28d9;
+    margin-bottom: 20px;
+}
+
+.back-btn:hover {
+    border-color: transparent;
+    transform: translateY(-2px);
+}
+
+/* Animation mượt */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 </style>

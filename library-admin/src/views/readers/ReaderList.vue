@@ -29,7 +29,7 @@
                                 <tr v-for="reader in readers" :key="reader._id"
                                     class="border-b hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition text-center">
                                     <td class="px-8 py-6 font-mono text-indigo-600 font-bold text-lg">{{ reader.MADOCGIA
-                                    }}
+                                        }}
                                     </td>
                                     <td class="px-8 py-6 font-semibold text-gray-800">{{ reader.HOLOT }}</td>
                                     <td class="px-8 py-6 text-gray-800">{{ reader.TEN }}</td>

@@ -26,15 +26,6 @@
                     <!-- RIGHT MENU -->
                     <ul class="navbar-nav ml-auto align-items-center">
 
-                        <!-- Notifications -->
-                        <li class="nav-item position-relative mx-2">
-                            <button class="btn btn-link text-white p-0" @click="openNotification">
-                                <i class="fa fa-bell fa-lg"></i>
-                                <span v-if="notifyCount > 0" class="badge badge-danger notify-badge">{{ notifyCount
-                                    }}</span>
-                            </button>
-                        </li>
-
                         <!-- ACCOUNT DROPDOWN -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
@@ -43,9 +34,9 @@
                             </a>
 
                             <div class="dropdown-menu dropdown-menu-right shadow">
-                                <!-- <router-link class="dropdown-item" to="/reader/profile">
+                                <router-link class="dropdown-item" to="/profile">
                                     <i class="fa fa-user mr-2"></i> Thông tin tài khoản
-                                </router-link> -->
+                                </router-link>
 
                                 <router-link class="dropdown-item" to="/my-borrowings">
                                     <i class="fa fa-book mr-2"></i> Theo dõi mượn sách
@@ -78,23 +69,34 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const keyword = ref("");
 
-const notifyCount = ref(3); // ví dụ, sau này lấy từ backend
-const userName = "Độc giả"; // thay bằng dữ liệu login
+// Lấy user
+const userData = localStorage.getItem('readerUser')
+    ? JSON.parse(localStorage.getItem('readerUser'))
+    : null;
 
+const userName = userData
+    ? userData.TEN || 'Độc giả'
+    : 'Độc giả';
+
+// ✅ CHỈ LÀM NHIỆM VỤ ĐẨY QUERY
 const submitSearch = () => {
     if (!keyword.value.trim()) return;
-    router.push({ path: "/search", query: { q: keyword.value } });
+
+    router.push({
+        path: "/",
+        query: { q: keyword.value }
+    });
 };
 
+// ✅ Logout
 const logout = () => {
-    alert("Đã đăng xuất"); // đặt API logout sau
-    router.push("/login");
-};
-
-const openNotification = () => {
-    alert("Mở danh sách thông báo!");
+    localStorage.removeItem('reader_token');
+    localStorage.removeItem('readerUser');
+    alert("Đã đăng xuất");
+    router.push('/login');
 };
 </script>
+
 
 <style scoped>
 .nav-gradient {

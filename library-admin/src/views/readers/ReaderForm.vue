@@ -37,7 +37,7 @@
                             </div>
                             <div class="form-group mb-4">
                                 <label class="font-weight-bold">Địa chỉ</label>
-                                <input v-model="reader.DiaChi" type="text" class="form-control form-control-lg">
+                                <input v-model="reader.DIACHI" type="text" class="form-control form-control-lg">
                             </div>
                             <div class="form-group mb-4">
                                 <label class="font-weight-bold">Điện thoại</label>
@@ -69,7 +69,7 @@ const reader = ref({
     Ten: '',
     NgaySinh: '',
     Phai: 'Nam',
-    DiaChi: '',
+    DIACHI: '',
     DienThoai: ''
 })
 

@@ -15,7 +15,7 @@
                     <div class="ml-3">
                         <button v-if="!isLogged" @click="goLogin" class="btn btn-outline-light">Đăng nhập</button>
                         <div v-else class="d-flex align-items-center">
-                            <span class="text-white mr-3">Xin chào {{ TEN }}</span>
+                            <span class="text-white mr-3">{{ HoTenNV }}</span>
                             <button @click="logout" class="btn btn-outline-light">Đăng xuất</button>
                         </div>
                     </div>
@@ -31,18 +31,51 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue' // Cần watch nếu muốn cập nhật trạng thái khi đổi route
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const isLogged = ref(false)
+const HoTenNV = ref('Nhân viên') // ✅ KHAI BÁO HOÁ TEN NHÂN VIÊN
 
-onMounted(() => {
-    isLogged.value = !!(localStorage.getItem('adminUser') || localStorage.getItem('admin_token'))
-})
+const loadUserState = () => {
+    const adminUser = localStorage.getItem('adminUser')
+    const adminToken = localStorage.getItem('admin_token')
+
+    // 1. Cập nhật trạng thái đăng nhập
+    isLogged.value = !!(adminUser || adminToken)
+
+    // 2. Tải Tên Nhân Viên
+    if (adminUser) {
+        try {
+            const user = JSON.parse(adminUser)
+            // Lấy Họ Tên từ dữ liệu user đã lưu
+            HoTenNV.value = user.HoTenNV || user.TenNV || 'Nhân viên';
+        } catch (e) {
+            console.error("Lỗi parse adminUser:", e);
+        }
+    } else {
+        HoTenNV.value = 'Nhân viên'; // Reset nếu không đăng nhập
+    }
+}
+
+onMounted(loadUserState)
+
+// Thêm Watcher để kiểm tra lại trạng thái đăng nhập khi điều hướng
+watch(
+    () => router.currentRoute.value.path,
+    () => {
+        loadUserState();
+    }
+);
 
 const goLogin = () => router.push('/admin/login')
-const logout = () => { localStorage.removeItem('adminUser'); localStorage.removeItem('admin_token'); isLogged.value = false; router.push('/admin/login') }
+const logout = () => {
+    localStorage.removeItem('adminUser');
+    localStorage.removeItem('admin_token');
+    loadUserState(); // Cập nhật trạng thái
+    router.push('/admin/login')
+}
 </script>
 
 <style>
