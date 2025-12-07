@@ -47,8 +47,10 @@
                     <div v-if="b.TrangThai === 'KhongDuyet'" class="alert alert-danger mt-3 p-2 mb-0"
                         style="font-size: 0.9rem;">
                         <i class="fas fa-exclamation-circle me-1"></i>
-                        <strong>Lý do từ chối:</strong>
-                        {{ b.GhiChu || 'Vi phạm quy định (Bạn đã mượn hoặc trả quá hạn >= 5 lần).' }}
+                        <strong>Lý do từ chối, 1 trong những lý do sau:</strong>
+                        {{ b.GhiChu || 'Vi phạm quy định (Bạn đã mượn hoặc trả quá hạn >= 5 lần)' }}
+                        {{ b.GhiChu || ' hoặc kho đã được mượn hết sách. Vui lòng mượn lại lần sau' }}
+
                     </div>
                 </div>
             </div>

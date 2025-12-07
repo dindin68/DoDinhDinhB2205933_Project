@@ -15,7 +15,7 @@
                             <div class="col-12 col-md-8">
                                 <div class="input-group shadow-sm">
                                     <input v-model="q" type="text" class="form-control border-0 py-2"
-                                        placeholder="Tìm tên sách, tên độc giả...">
+                                        placeholder="Tìm mã sách, tên độc giả...">
                                 </div>
                             </div>
                             <div class="col-12 col-md-4">
@@ -25,7 +25,7 @@
                                         <option value="ChoDuyet">Chờ duyệt</option>
                                         <option value="DaDuyet">Đã duyệt</option>
                                         <option value="DaMuon">Đang mượn</option>
-                                        <option value="DaTra">↩Đã trả</option>
+                                        <option value="DaTra">Đã trả</option>
                                         <option value="KhongDuyet">Đã từ chối</option>
                                         <option value="TraMuon">Trả muộn</option>
                                         <option value="DungHan">Đúng hạn</option>
@@ -119,6 +119,7 @@ import api from '@/api'
 
 const borrowings = ref([])
 const readers = ref([])
+const booksMap = ref({});
 const q = ref('')
 const filterStatus = ref('')
 
@@ -146,16 +147,56 @@ const getReaderInfo = (maDocGiaTrongPhieu) => {
     if (reader) return `${reader.HOLOT} ${reader.TEN}`
     return maDocGiaTrongPhieu
 }
+const fetchData = async () => {
+    try {
+        const [resBorrow, resBooks, resStats] = await Promise.all([
+            api.get('/borrowings'),           // Lấy danh sách phiếu mượn
+            api.get('/books'),                // Lấy thông tin sách gốc
+            api.get('/borrowings/stats')      // Lấy số lượng đang bận
+        ]);
+
+        borrowings.value = resBorrow.data;
+
+        // Xử lý dữ liệu sách để tính tồn kho
+        const stats = resStats.data;
+
+        // Tạo một từ điển (Map) sách: { "HEL00": { TenSach:..., ConLai: 5 } }
+        resBooks.data.forEach(book => {
+            const stat = stats.find(s => s._id === book.MaSach);
+            const daMuon = stat ? stat.count : 0;
+
+            booksMap.value[book.MaSach] = {
+                ...book,
+                ConLai: (book.SOQUYEN || 0) - daMuon // Tính sẵn số còn lại
+            };
+        });
+
+    } catch (err) {
+        console.error(err);
+    }
+};
 
 // LOGIC XỬ LÝ DUYỆT / TỪ CHỐI
 
 // Logic nút "Duyệt" (Check xanh)
+// Logic nút "Duyệt" (Check xanh)
 const handleApprove = (borrowing) => {
+    let warnings = [];
+
+    // --- 1. KIỂM TRA TỒN KHO (MỚI THÊM) ---
+    const bookInfo = booksMap.value[borrowing.MaSach];
+    if (bookInfo && bookInfo.ConLai <= 0) {
+        warnings.push(`Sách "${bookInfo.TenSach}" ĐÃ HẾT HÀNG (Kho: ${bookInfo.ConLai}).`);
+        warnings.push(`Vui lòng TỪ CHỐI yêu cầu này.`);
+    }
+
+    // --- 2. KIỂM TRA LỊCH SỬ ĐỘC GIẢ (CŨ) ---
     const readerId = borrowing.MaDocGia;
     const history = borrowings.value.filter(item => item.MaDocGia === readerId);
 
-    // Đếm
+    // Đếm số sách đang giữ và số lần trả muộn
     const unreturnedCount = history.filter(item => ['DaMuon', 'QuaHan'].includes(item.TrangThai) && item._id !== borrowing._id).length;
+
     const lateCount = history.filter(item => {
         if (item.TrangThai === 'DaTra' && item.NgayTraThucTe) {
             return new Date(item.NgayTraThucTe).setHours(0, 0, 0, 0) > new Date(item.NgayTra).setHours(0, 0, 0, 0);
@@ -163,23 +204,18 @@ const handleApprove = (borrowing) => {
         return false;
     }).length;
 
-    let warnings = [];
     if (unreturnedCount >= 5) warnings.push(`Đang mượn ${unreturnedCount} cuốn (Quá giới hạn 5).`);
     if (lateCount >= 5) warnings.push(`Đã trả trễ ${lateCount} lần (Uy tín thấp).`);
 
+    // --- 3. XỬ LÝ KẾT QUẢ ---
     if (warnings.length > 0) {
+        // Nếu có bất kỳ cảnh báo nào (hết hàng HOẶC độc giả xấu), hiện Modal
         warningMessages.value = warnings;
         pendingBorrowingId.value = borrowing._id;
         showModal.value = true;
     } else {
+        // Nếu mọi thứ ổn, duyệt luôn
         updateStatus(borrowing._id, 'DaDuyet');
-    }
-}
-
-//Logic nút "Từ chối" (Dấu X đỏ ở ngoài bảng)
-const handleReject = async (borrowing) => {
-    if (confirm(`Bạn chắc chắn muốn TỪ CHỐI yêu cầu mượn sách này?`)) {
-        await updateStatus(borrowing._id, 'KhongDuyet');
     }
 }
 
@@ -212,6 +248,7 @@ const updateStatus = async (id, status) => {
         const res = await api.put(`/borrowings/${id}/trangthai`, payload)
         // Cập nhật lại UI ngay lập tức
         borrowings.value = borrowings.value.map(b => b._id === id ? res.data : b)
+        await fetchData()
     } catch (err) {
         alert(err.response?.data?.message || 'Lỗi cập nhật.')
     }
@@ -282,6 +319,7 @@ const remove = async (id) => {
 onMounted(() => {
     fetchBorrowings()
     fetchReaders()
+    fetchData()
 })
 </script>
 
