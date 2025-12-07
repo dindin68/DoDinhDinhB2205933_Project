@@ -47,7 +47,7 @@
               </select>
             </div>
 
-            <!-- Địa chỉ (full row) -->
+            <!-- Địa chỉ -->
             <div class="form-group col-md-12">
               <label>Địa chỉ</label>
               <input v-model="form.DIACHI" class="form-control" autocomplete="street-address">

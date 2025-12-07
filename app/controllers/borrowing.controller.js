@@ -3,7 +3,6 @@ const MongoDB = require("../utils/mongodb.util");
 const { getNextCode } = require("../utils/code.util");
 const { ObjectId } = require("mongodb");
 
-// 1. Lấy tất cả borrowings
 exports.getAll = async (req, res) => {
   let client;
   try {
@@ -18,7 +17,6 @@ exports.getAll = async (req, res) => {
   }
 };
 
-// 2. Lấy 1 borrowing theo _id
 exports.getOne = async (req, res) => {
   let client;
   try {
@@ -37,7 +35,6 @@ exports.getOne = async (req, res) => {
   }
 };
 
-// 3. Tạo borrowing mới
 exports.create = async (req, res) => {
   let client;
   try {
@@ -94,7 +91,6 @@ exports.create = async (req, res) => {
   }
 };
 
-// 4. Update borrowing theo _id (Cập nhật thông tin chung)
 exports.update = async (req, res) => {
   let client;
   try {
@@ -121,7 +117,6 @@ exports.update = async (req, res) => {
   }
 };
 
-// 5. Xóa borrowing theo _id
 exports.delete = async (req, res) => {
   let client;
   try {
@@ -141,7 +136,6 @@ exports.delete = async (req, res) => {
   }
 };
 
-// 6. Cập nhật trạng thái (Duyệt, Mượn, Trả) - Đã Đơn Giản Hóa
 exports.updateStatus = async (req, res) => {
   let client;
   try {
@@ -156,29 +150,32 @@ exports.updateStatus = async (req, res) => {
 
     if (!borrowing) return res.status(404).json({ message: "Not found" });
 
-    // Đối tượng cập nhật cơ bản
     const updateFields = { TrangThai: TrangThai, NgayCapNhat: new Date() };
 
     let isValid = false;
 
+    // 👇 KIỂM TRA LOGIC CHUYỂN ĐỔI TRẠNG THÁI
     switch (borrowing.TrangThai) {
       case "ChoDuyet":
-        if (TrangThai === "DaDuyet") isValid = true;
+        // 🔴 SỬA Ở ĐÂY: Thêm điều kiện || TrangThai === "KhongDuyet"
+        if (TrangThai === "DaDuyet" || TrangThai === "KhongDuyet") {
+          isValid = true;
+        }
         break;
 
       case "DaDuyet":
         if (TrangThai === "DaMuon") isValid = true;
         break;
 
-      // ✅ ĐƠN GIẢN HÓA: Dù là Đang Mượn hay Quá Hạn, chỉ cần bấm TRẢ là cho phép
       case "DaMuon":
       case "QuaHan":
         if (TrangThai === "DaTra") {
           isValid = true;
-          updateFields.NgayTraThucTe = new Date(); // Ghi nhận ngày trả
+          updateFields.NgayTraThucTe = new Date();
         }
         break;
 
+      case "KhongDuyet":
       case "DaTra":
         isValid = false;
         break;
@@ -189,17 +186,19 @@ exports.updateStatus = async (req, res) => {
     }
 
     if (!isValid) {
-      return res
-        .status(400)
-        .json({ message: "Trạng thái chuyển đổi không hợp lệ." });
+      return res.status(400).json({
+        message: `Không thể chuyển từ '${borrowing.TrangThai}' sang '${TrangThai}'`,
+      });
     }
 
     await db
       .collection("THEODOIMUONSACH")
       .updateOne({ _id: new ObjectId(id) }, { $set: updateFields });
+
     const updated = await db
       .collection("THEODOIMUONSACH")
       .findOne({ _id: new ObjectId(id) });
+
     res.json(updated);
   } catch (err) {
     console.error(err);
@@ -209,8 +208,6 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
-// 7. Cập nhật trạng thái quá hạn (DUMMY - Để tránh lỗi Route)
-// Hàm này chỉ trả về danh sách, không còn tự động cập nhật sang 'QuaHan' nữa
 exports.checkOverdueStatus = async (req, res) => {
   let client;
   try {
@@ -229,7 +226,7 @@ exports.checkOverdueStatus = async (req, res) => {
   }
 };
 
-// 8. Lấy danh sách mượn của tôi (Cho Reader)
+// Lấy danh sách mượn của tôi (Cho Reader)
 exports.getMyBorrowings = async (req, res) => {
   let client;
   try {

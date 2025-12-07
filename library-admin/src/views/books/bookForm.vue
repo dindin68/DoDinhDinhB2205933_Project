@@ -91,6 +91,33 @@
                                 required>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-4">
+                                <label class="font-weight-bold">Đơn giá (VND)</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                                    </div>
+                                    <input v-model="book.DONGIA" type="number" min="0"
+                                        class="form-control form-control-lg" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group mb-4">
+                                <label class="font-weight-bold">Số quyển</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-layer-group"></i></span>
+                                    </div>
+                                    <input v-model="book.SOQUYEN" type="number" min="0"
+                                        class="form-control form-control-lg" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="form-group mb-4">
                         <label class="font-weight-bold">Ảnh sách</label>
@@ -125,13 +152,14 @@ const isSaving = ref(false)
 
 
 
-// 1. DATA CƠ BẢN CỦA SÁCH
+// DATA CƠ BẢN CỦA SÁCH
 const book = ref({
     MaSach: '',
     TenSach: '',
     TacGia: '',
     NamXuatBan: '',
-    // Sử dụng tên trường trong template (NhaXuatBan) để bind dữ liệu
+    DONGIA: 0,
+    SOQUYEN: 0,
     NhaXuatBan: ''
 })
 // Watch để reset tên NXB mới khi người dùng đổi lựa chọn
@@ -145,15 +173,14 @@ watch(() => book.value.NhaXuatBan, (val) => {
 const imageFile = ref(null)
 const handleFileUpload = (e) => { imageFile.value = e.target.files[0] }
 
-// 2. DATA VỀ NHÀ XUẤT BẢN
+// DATA VỀ NHÀ XUẤT BẢN
 const publishers = ref([]) // Danh sách NXB được tải từ API
 const newPublisherName = ref('')
 const newPublisherAddress = ref('') // Tên NXB mới nếu người dùng chọn 'Thêm mới'
 
-// 3. HÀM TẢI DANH SÁCH NXB
+// HÀM TẢI DANH SÁCH NXB
 const fetchPublishers = async () => {
     try {
-        // Giả sử API endpoint để lấy danh sách NXB là /publishers
         const res = await api.get('/publishers')
         publishers.value = res.data
     } catch (error) {
@@ -165,7 +192,6 @@ const fetchBook = async () => {
     if (isEdit) {
         try {
             const res = await api.get(`/books/${route.params.id}`)
-            // Gán dữ liệu sách. Giả sử API trả về ID NXB trong trường NhaXuatBan
             book.value = res.data
         } catch (err) {
             console.error('Lỗi khi tải dữ liệu sách:', err)
@@ -175,13 +201,11 @@ const fetchBook = async () => {
 
 const createNewPublisher = async (name) => {
     try {
-        // 🚨 CHÚ Ý: Gửi cả TENNXB và DIACHI lên Backend
         const res = await api.post('/publishers', {
             TENNXB: name,
-            DIACHI: newPublisherAddress.value // ✅ Gửi trường DIACHI
+            DIACHI: newPublisherAddress.value
         })
 
-        // ... (logic kiểm tra và trả về _id giữ nguyên)
         if (res.data && res.data._id) {
             return res.data._id
         } else {
@@ -195,14 +219,17 @@ const createNewPublisher = async (name) => {
     }
 }
 
-// 5. HÀM LƯU SÁCH ĐÃ ĐIỀU CHỈNH (CÓ THAY ĐỔI)
+// HÀM LƯU SÁCH ĐÃ ĐIỀU CHỈNH (CÓ THAY ĐỔI)
 const saveBook = async () => {
     try {
         const formData = new FormData()
         formData.append('MaSach', book.value.MaSach)
         formData.append('TenSach', book.value.TenSach)
         formData.append('TacGia', book.value.TacGia)
+        formData.append('DONGIA', Number(book.value.DONGIA))
+        formData.append('SOQUYEN', Number(book.value.SOQUYEN))
         formData.append('NamXuatBan', Number(book.value.NamXuatBan))
+
 
         let publisherIdToSave = typeof book.value.NhaXuatBan === 'object'
             ? book.value.NhaXuatBan._id
@@ -210,8 +237,7 @@ const saveBook = async () => {
 
 
 
-        // 🌟 LOGIC CHÍNH: KIỂM TRA VÀ TẠO NXB MỚI 🌟
-        // ...
+        //KIỂM TRA VÀ TẠO NXB MỚI
         if (book.value.NhaXuatBan === 'new') {
             if (!newPublisherName.value) {
                 alert('Vui lòng nhập tên Nhà xuất bản mới.')
@@ -219,23 +245,22 @@ const saveBook = async () => {
             }
 
             try {
-                // BƯỚC 1: Gọi API để tạo NXB mới và lấy ID
+                // Gọi API để tạo NXB mới và lấy ID
                 const newId = await createNewPublisher(newPublisherName.value)
                 publisherIdToSave = newId // Sử dụng ID NXB mới tạo
             } catch (error) {
                 // Nếu createNewPublisher throw lỗi, catch sẽ bắt và hiển thị
                 alert(error.message);
-                return; // 🌟 QUAN TRỌNG: DỪNG LẠI NẾU TẠO NXB THẤT BẠI
+                return;
             }
         }
 
-        // 🚨 BƯỚC 2: Gửi ID của NXB đã có hoặc ID mới tạo đi
+        //Gửi ID của NXB đã có hoặc ID mới tạo đi
         // Sử dụng MANXB để map với collection SACH
         formData.append('MANXB', publisherIdToSave || '')
 
         if (imageFile.value) formData.append('image', imageFile.value)
 
-        // ... (Giữ nguyên logic PUT/POST) ...
         if (isEdit) {
             await api.put(`/books/${route.params.id}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }

@@ -56,7 +56,6 @@ const submit = async () => {
     try {
         const res = await api.post('/auth/reader-login', { DIENTHOAI: form.DIENTHOAI, PASSWORD: form.PASSWORD })
         const { token, reader, message } = res.data
-        // Save token under reader-specific key to avoid collision with admin
         localStorage.setItem('reader_token', token)
         localStorage.setItem('readerUser', JSON.stringify(reader || {}))
         alert(message || 'Đăng nhập thành công')

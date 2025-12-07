@@ -14,7 +14,7 @@
                         </h3>
                     </div>
 
-                    <!-- SEARCH BAR CHUẨN ĐÃ GHI NHỚ -->
+                    <!-- SEARCH BAR -->
                     <div class="col-12 col-md-7">
                         <div class="input-group shadow-sm">
                             <input v-model="q" type="text" class="form-control border-0 py-2"
@@ -53,7 +53,7 @@
                         </thead>
 
                         <tbody>
-                            <tr v-for="reader in filteredReaders" :key="reader._id || reader.MaDocGia">
+                            <tr v-for="reader in filteredReaders" :key="reader._id || reader.MADOCGIA">
 
                                 <td class="text-primary font-weight-bold">
                                     {{ reader.MaDocGia || reader.MADOCGIA }}
@@ -79,12 +79,12 @@
                                 <td>
                                     <div class="d-flex justify-content-center flex-column flex-sm-row">
 
-                                        <button @click="$router.push(`/readers/edit/${reader.MaDocGia}`)"
+                                        <!-- <button @click="$router.push(`/readers/edit/${reader.MaDocGia}`)"
                                             class="btn btn-warning btn-sm mb-1 mb-sm-0 mr-sm-1 btn-action">
                                             <i class="fas fa-edit"></i>
-                                        </button>
+                                        </button> -->
 
-                                        <button @click="deleteReader(reader.MaDocGia)"
+                                        <button @click="deleteReader(reader.MADOCGIA)"
                                             class="btn btn-danger btn-sm btn-action">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
@@ -137,7 +137,7 @@ const formatDate = (dateString) => {
     return date.toLocaleDateString('vi-VN')
 }
 
-// ✅ LỌC TÌM KIẾM REALTIME
+// LỌC TÌM KIẾM REALTIME
 const filteredReaders = computed(() => {
     if (!q.value) return readers.value
 
@@ -156,13 +156,11 @@ onMounted(fetchReaders)
 
 
 <style scoped>
-/* Hover hàng */
 .table tbody tr:hover {
     background: #f0f4ff;
     transition: background 0.2s;
 }
 
-/* Nút action */
 .btn-action:hover {
     transform: scale(1.05);
     transition: transform 0.2s;
@@ -172,7 +170,6 @@ onMounted(fetchReaders)
     font-size: 0.8rem;
 }
 
-/* Responsive mobile */
 @media (max-width: 768px) {
     .btn-action {
         font-size: 0.7rem;

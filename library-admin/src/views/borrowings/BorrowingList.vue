@@ -1,61 +1,39 @@
 <template>
     <div class="container mt-3">
         <div class="card shadow-lg border-0 rounded-lg">
-
-            <!-- HEADER -->
             <div class="card-header border-0 shadow-lg"
                 style="background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899); border-radius: 1rem;">
-
                 <div class="row align-items-center py-2 g-2">
-
-                    <!-- TIÊU ĐỀ -->
                     <div class="col-12 col-lg-3 text-center text-lg-start">
                         <h4
                             class="mb-0 text-white fw-bold d-flex align-items-center justify-content-center justify-content-lg-start gap-2">
-                            <i class="fas fa-book-reader"></i>
-                            Quản lý mượn sách
+                            <i class="fas fa-book-reader"></i> Quản lý mượn sách
                         </h4>
                     </div>
-
-                    <!-- SEARCH + FILTER -->
                     <div class="col-12 col-lg-8">
                         <div class="row g-2">
-
-                            <!-- SEARCH -->
                             <div class="col-12 col-md-8">
                                 <div class="input-group shadow-sm">
                                     <input v-model="q" type="text" class="form-control border-0 py-2"
                                         placeholder="Tìm tên sách, tên độc giả...">
                                 </div>
                             </div>
-
-                            <!-- FILTER -->
                             <div class="col-12 col-md-4">
                                 <div class="input-group shadow-sm">
                                     <select v-model="filterStatus" class="form-control border-0 py-2">
                                         <option value="">Tất cả</option>
                                         <option value="ChoDuyet">Chờ duyệt</option>
                                         <option value="DaDuyet">Đã duyệt</option>
-                                        <option value="DaMuon">Đã mượn</option>
-                                        <option value="DaTra">Đã trả</option>
+                                        <option value="DaMuon">Đang mượn</option>
+                                        <option value="DaTra">↩Đã trả</option>
+                                        <option value="KhongDuyet">Đã từ chối</option>
                                         <option value="TraMuon">Trả muộn</option>
                                         <option value="DungHan">Đúng hạn</option>
                                     </select>
                                 </div>
                             </div>
-
                         </div>
                     </div>
-
-                    <!-- NÚT + ICON -->
-                    <!-- <div class="col-12 col-lg-1 text-center text-lg-end">
-                        <router-link to="/borrowings/create"
-                            class="btn btn-light btn-sm shadow-sm d-inline-flex align-items-center justify-content-center"
-                            style="width: 38px; height: 38px; border-radius: 50%;">
-                            <i class="fas fa-plus text-success"></i>
-                        </router-link>
-                    </div> -->
-
                 </div>
             </div>
 
@@ -77,31 +55,26 @@
                         <tbody>
                             <tr v-for="b in filtered" :key="b._id">
                                 <td class="text-primary font-weight-bold">{{ b.MaMuon }}</td>
-
-                                <td class="fw-bold text-dark">
-                                    {{ getReaderInfo(b.MaDocGia) }}
-                                </td>
-
+                                <td class="fw-bold text-dark">{{ getReaderInfo(b.MaDocGia) }}</td>
                                 <td>{{ b.MaSach }}</td>
                                 <td>{{ formatDate(b.NgayMuon) }}</td>
                                 <td>{{ formatDate(b.NgayTra) }}</td>
+                                <td><span :class="statusClass(b.TrangThai)">{{ formatStatus(b.TrangThai) }}</span></td>
+                                <td><span v-if="getReturnStatus(b)" :class="getReturnStatus(b).class">{{
+                                    getReturnStatus(b).label }}</span></td>
                                 <td>
-                                    <span :class="statusClass(b.TrangThai)">{{ formatStatus(b.TrangThai) }}</span>
-                                </td>
-                                <td>
-                                    <span v-if="getReturnStatus(b)" :class="getReturnStatus(b).class">
-                                        {{ getReturnStatus(b).label }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button v-if="b.TrangThai === 'ChoDuyet'" @click="updateStatus(b._id, 'DaDuyet')"
-                                        class="btn btn-success btn-sm me-1"><i class="fas fa-check"></i></button>
+                                    <button v-if="b.TrangThai === 'ChoDuyet'" @click="handleApprove(b)"
+                                        class="btn btn-success btn-sm me-1" title="Duyệt">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+
                                     <button v-if="b.TrangThai === 'DaDuyet'" @click="updateStatus(b._id, 'DaMuon')"
                                         class="btn btn-info btn-sm me-1"><i class="fas fa-book-reader"></i></button>
                                     <button v-if="b.TrangThai === 'DaMuon' || b.TrangThai === 'QuaHan'"
                                         @click="updateStatus(b._id, 'DaTra')" class="btn btn-secondary btn-sm me-1"><i
                                             class="fas fa-undo-alt"></i></button>
-                                    <button @click="remove(b._id)" class="btn btn-danger btn-sm"><i
+
+                                    <button @click="remove(b._id)" class="btn btn-outline-danger btn-sm border-0"><i
                                             class="fas fa-trash-alt"></i></button>
                                 </td>
                             </tr>
@@ -111,6 +84,30 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="showModal" class="custom-modal-backdrop">
+        <div class="custom-modal-content card shadow-lg border-0">
+            <div class="card-header bg-warning text-dark fw-bold">
+                <i class="fas fa-exclamation-triangle me-2"></i> CẢNH BÁO VI PHẠM
+            </div>
+            <div class="card-body">
+                <p class="mb-3 text-secondary">Độc giả này có các vấn đề sau:</p>
+                <ul class="text-danger fw-bold text-start bg-light p-3 rounded">
+                    <li v-for="(msg, index) in warningMessages" :key="index">{{ msg }}</li>
+                </ul>
+                <p class="mb-0 mt-3 text-center fw-bold">Bạn muốn xử lý thế nào?</p>
+            </div>
+            <div class="card-footer d-flex justify-content-between bg-white border-0 pb-3 px-4">
+                <button @click="confirmRejectInModal" class="btn btn-danger rounded-pill px-4">
+                    <i class="fas fa-times me-1"></i> Từ chối
+                </button>
+
+                <button @click="confirmForceApprove" class="btn btn-success rounded-pill px-4">
+                    <i class="fas fa-check me-1"></i> Vẫn duyệt
+                </button>
             </div>
         </div>
     </div>
@@ -125,54 +122,111 @@ const readers = ref([])
 const q = ref('')
 const filterStatus = ref('')
 
-// Fetch Borrowings
+const showModal = ref(false)
+const warningMessages = ref([])
+const pendingBorrowingId = ref(null)
+
+// Fetch Data
 const fetchBorrowings = async () => {
     try {
         const res = await api.get('/borrowings')
         borrowings.value = res.data
     } catch (err) { console.error(err) }
 }
-
-// Fetch Readers
 const fetchReaders = async () => {
     try {
         const res = await api.get('/readers')
         readers.value = res.data
     } catch (err) { console.error(err) }
 }
-
-// HÀM GHÉP TÊN (Đã sửa theo yêu cầu)
 const getReaderInfo = (maDocGiaTrongPhieu) => {
     if (!maDocGiaTrongPhieu) return '---'
     if (readers.value.length === 0) return maDocGiaTrongPhieu
-
-    // Tìm trong danh sách readers người có MADOCGIA trùng khớp
-    // Lưu ý: Đảm bảo API trả về đúng tên trường là MADOCGIA, HOLOT, TEN
     const reader = readers.value.find(r => r.MADOCGIA === maDocGiaTrongPhieu)
-
-    if (reader) {
-        // Ghép chuỗi HOLOT và TEN
-        return `${reader.HOLOT} ${reader.TEN}`
-    }
+    if (reader) return `${reader.HOLOT} ${reader.TEN}`
     return maDocGiaTrongPhieu
 }
 
-// Computed Filter (Cập nhật tìm kiếm theo tên)
+// LOGIC XỬ LÝ DUYỆT / TỪ CHỐI
+
+// Logic nút "Duyệt" (Check xanh)
+const handleApprove = (borrowing) => {
+    const readerId = borrowing.MaDocGia;
+    const history = borrowings.value.filter(item => item.MaDocGia === readerId);
+
+    // Đếm
+    const unreturnedCount = history.filter(item => ['DaMuon', 'QuaHan'].includes(item.TrangThai) && item._id !== borrowing._id).length;
+    const lateCount = history.filter(item => {
+        if (item.TrangThai === 'DaTra' && item.NgayTraThucTe) {
+            return new Date(item.NgayTraThucTe).setHours(0, 0, 0, 0) > new Date(item.NgayTra).setHours(0, 0, 0, 0);
+        }
+        return false;
+    }).length;
+
+    let warnings = [];
+    if (unreturnedCount >= 5) warnings.push(`Đang mượn ${unreturnedCount} cuốn (Quá giới hạn 5).`);
+    if (lateCount >= 5) warnings.push(`Đã trả trễ ${lateCount} lần (Uy tín thấp).`);
+
+    if (warnings.length > 0) {
+        warningMessages.value = warnings;
+        pendingBorrowingId.value = borrowing._id;
+        showModal.value = true;
+    } else {
+        updateStatus(borrowing._id, 'DaDuyet');
+    }
+}
+
+//Logic nút "Từ chối" (Dấu X đỏ ở ngoài bảng)
+const handleReject = async (borrowing) => {
+    if (confirm(`Bạn chắc chắn muốn TỪ CHỐI yêu cầu mượn sách này?`)) {
+        await updateStatus(borrowing._id, 'KhongDuyet');
+    }
+}
+
+//Logic trong Modal: Nút "Từ chối"
+const confirmRejectInModal = async () => {
+    if (pendingBorrowingId.value) {
+        await updateStatus(pendingBorrowingId.value, 'KhongDuyet'); // Cập nhật trạng thái thành Không Duyệt
+    }
+    closeModal();
+}
+
+//Logic trong Modal: Nút "Vẫn duyệt"
+const confirmForceApprove = async () => {
+    if (pendingBorrowingId.value) {
+        await updateStatus(pendingBorrowingId.value, 'DaDuyet');
+    }
+    closeModal();
+}
+
+const closeModal = () => {
+    showModal.value = false;
+    pendingBorrowingId.value = null;
+    warningMessages.value = [];
+}
+
+const updateStatus = async (id, status) => {
+    try {
+        const payload = { TrangThai: status }
+        // Gọi API cập nhật
+        const res = await api.put(`/borrowings/${id}/trangthai`, payload)
+        // Cập nhật lại UI ngay lập tức
+        borrowings.value = borrowings.value.map(b => b._id === id ? res.data : b)
+    } catch (err) {
+        alert(err.response?.data?.message || 'Lỗi cập nhật.')
+    }
+}
+
+//  UTILS & FORMAT
 const filtered = computed(() => {
     let data = borrowings.value
-
     if (q.value) {
         const t = q.value.toLowerCase()
         data = data.filter(b => {
-            // Lấy tên ra để tìm kiếm
             const readerName = getReaderInfo(b.MaDocGia).toLowerCase()
-
-            return (b.MaMuon || '').toLowerCase().includes(t) ||
-                readerName.includes(t) ||
-                (b.MaSach || '').toLowerCase().includes(t)
+            return (b.MaMuon || '').toLowerCase().includes(t) || readerName.includes(t) || (b.MaSach || '').toLowerCase().includes(t)
         })
     }
-
     if (!filterStatus.value) return data
     return data.filter(b => {
         const note = getReturnStatus(b)?.label
@@ -184,63 +238,42 @@ const filtered = computed(() => {
     })
 })
 
-const updateStatus = async (id, status) => {
-    const doUpdate = async (force = false) => {
-        const payload = { TrangThai: status, force }
-        const res = await api.put(`/borrowings/${id}/trangthai`, payload)
-        borrowings.value = borrowings.value.map(b => b._id === id ? res.data : b)
-    }
-    try { await doUpdate(false) }
-    catch (err) {
-        if (err.response?.status === 403) {
-            if (confirm(err.response.data.message + "\nBạn có muốn duyệt tiếp không?")) await doUpdate(true)
-        } else { alert(err.response?.data?.message || 'Lỗi cập nhật.') }
-    }
+const formatDate = (d) => d ? new Date(d).toLocaleDateString('vi-VN') : ''
+
+//  Hiển thị trạng thái
+const formatStatus = (s) => {
+    if (s === 'QuaHan') return 'Đang mượn (Quá hạn)';
+    if (s === 'KhongDuyet') return 'Đã từ chối'; // Thêm dòng này
+    return s;
 }
 
-const formatDate = (d) => d ? new Date(d).toLocaleDateString('vi-VN') : ''
-const formatStatus = (s) => (s === 'QuaHan' ? 'Đang mượn' : s)
+// Màu sắc trạng thái
 const statusClass = (s) => {
     switch (s) {
-        case 'ChoDuyet': return 'badge bg-warning text-white'
-        case 'DaDuyet': return 'badge bg-info text-white'
-        case 'DaTra': return 'badge bg-success text-white'
-        case 'DaMuon': return 'badge bg-primary text-white'
-        default: return 'badge bg-secondary text-white'
+        case 'ChoDuyet': return 'badge bg-warning text-dark'
+        case 'DaDuyet': return 'badge bg-info text-dark'
+        case 'DaTra': return 'badge bg-success'
+        case 'DaMuon': return 'badge bg-primary'
+        case 'KhongDuyet': return 'badge bg-danger'
+        default: return 'badge bg-secondary'
     }
 }
 
 const getReturnStatus = (b) => {
     const dueDate = new Date(b.NgayTra)
     dueDate.setHours(0, 0, 0, 0)
-
-    // 1) Đã trả → kiểm tra đúng hạn / trả muộn
     if (b.TrangThai === "DaTra" && b.NgayTraThucTe) {
         const returnDate = new Date(b.NgayTraThucTe)
         returnDate.setHours(0, 0, 0, 0)
-
-        if (returnDate > dueDate) {
-            return { label: "Trả muộn", class: "badge bg-danger text-white" }
-        }
-        return { label: "Đúng hạn", class: "badge bg-success text-white" }
+        return returnDate > dueDate ? { label: "Trả muộn", class: "badge bg-danger" } : { label: "Đúng hạn", class: "badge bg-success" }
     }
-
-    // 2) Chưa mượn → ChoDuyet / DaDuyet
-    if (["ChoDuyet", "DaDuyet"].includes(b.TrangThai)) {
-        return { label: "Chưa mượn", class: "badge bg-secondary text-white" }
-    }
-
-    // 3) Đang mượn
-    if (b.TrangThai === "DaMuon") {
-        return { label: "Đang mượn", class: "badge bg-primary text-white" }
-    }
-
+    if (["ChoDuyet", "DaDuyet", "KhongDuyet"].includes(b.TrangThai)) return { label: "Chưa mượn", class: "badge bg-secondary" }
+    if (b.TrangThai === "DaMuon") return { label: "Đang mượn", class: "badge bg-primary" }
     return null
 }
 
-
 const remove = async (id) => {
-    if (confirm('Xóa phiếu này?')) {
+    if (confirm('Xóa vĩnh viễn phiếu này?')) {
         await api.delete(`/borrowings/${id}`)
         fetchBorrowings()
     }
@@ -270,12 +303,24 @@ onMounted(() => {
     border-radius: 50rem;
 }
 
-.hover-scale {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+.custom-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
 }
 
-.hover-scale:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+.custom-modal-content {
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 1rem;
+    overflow: hidden;
 }
 </style>

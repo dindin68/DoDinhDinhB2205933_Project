@@ -104,7 +104,7 @@ exports.update = async (req, res) => {
 
       const result = await db
         .collection("NHAXUATBAN")
-        .updateOne({ MANXB: req.params.id }, { $set: fieldsToUpdate }); // ✅ Dùng fieldsToUpdate
+        .updateOne({ MANXB: req.params.id }, { $set: fieldsToUpdate });
 
       if (result.matchedCount === 0)
         throw { status: 404, message: "Publisher not found" };

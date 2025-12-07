@@ -1,35 +1,29 @@
 const MongoDB = require("../utils/mongodb.util");
 const { getNextCode } = require("../utils/code.util");
-const { ObjectId } = require("mongodb"); // Cần import nếu chưa có
+const { ObjectId } = require("mongodb");
 
 // Hàm trợ giúp để lấy mã logic NXB từ ID (ObjectId)
 const getMaNXBFromId = async (db, publisherId) => {
-  // 1. Kiểm tra xem ID có hợp lệ không (tránh lỗi khi tạo NXB mới chưa có ID)
+  // Kiểm tra xem ID có hợp lệ không (tránh lỗi khi tạo NXB mới chưa có ID)
   if (!publisherId) return null;
 
-  // 2. Chuyển string ID thành ObjectId
+  // Chuyển string ID thành ObjectId
   let objectId;
   try {
     objectId = new ObjectId(publisherId);
   } catch (e) {
-    // Nếu không phải ID hợp lệ (ví dụ: là tên NXB mới được gửi)
-    // Trong luồng hiện tại, Frontend đã đảm bảo ID được gửi đi.
     console.error("ID NXB không hợp lệ:", publisherId);
     return null;
   }
 
-  // 3. Tìm NXB theo ID
+  //Tìm NXB theo ID
   const publisher = await db.collection("NHAXUATBAN").findOne({
     _id: objectId,
   });
 
-  // 4. Trả về Mã logic NXB
+  // Trả về Mã logic NXB
   return publisher ? publisher.MANXB : null;
 };
-
-// =========================================================================
-// HÀM TẠO SÁCH (ĐÃ SỬA)
-// =========================================================================
 
 exports.create = async (req, res) => {
   let client;
@@ -39,10 +33,13 @@ exports.create = async (req, res) => {
 
     const bookData = { ...req.body };
 
-    // 🌟 LOGIC MỚI: CHUYỂN ID NXB THÀNH MÃ LOGIC (MANXB)
     if (bookData.MANXB) {
       const maNXBLogic = await getMaNXBFromId(db, bookData.MANXB);
 
+      if (bookData.DONGIA) bookData.DONGIA = Number(bookData.DONGIA);
+      if (bookData.SOQUYEN) bookData.SOQUYEN = Number(bookData.SOQUYEN);
+      if (bookData.NamXuatBan)
+        bookData.NamXuatBan = Number(bookData.NamXuatBan);
       if (maNXBLogic) {
         bookData.MANXB = maNXBLogic; // Lưu Mã logic (ví dụ: NXB001)
       } else {
@@ -51,8 +48,6 @@ exports.create = async (req, res) => {
           .json({ message: "Nhà Xuất Bản không tồn tại hoặc không hợp lệ." });
       }
     }
-    // ------------------------------------------------------------------
-
     // Nếu có file ảnh thì thêm trường ImageUrl
     if (req.file) {
       bookData.ImageUrl = `/uploads/${req.file.filename}`;
@@ -76,9 +71,7 @@ exports.create = async (req, res) => {
   }
 };
 
-// =========================================================================
-// HÀM CẬP NHẬT SÁCH (ĐÃ SỬA)
-// =========================================================================
+// HÀM CẬP NHẬT SÁCH
 
 exports.update = async (req, res) => {
   let client;
@@ -88,20 +81,22 @@ exports.update = async (req, res) => {
 
     const updateData = { ...req.body };
     if (updateData._id) delete updateData._id;
+    if (updateData.DONGIA) updateData.DONGIA = Number(updateData.DONGIA);
+    if (updateData.SOQUYEN) updateData.SOQUYEN = Number(updateData.SOQUYEN);
+    if (updateData.NamXuatBan)
+      updateData.NamXuatBan = Number(updateData.NamXuatBan);
 
-    // 🌟 LOGIC MỚI: CHUYỂN ID NXB THÀNH MÃ LOGIC (MANXB)
     if (updateData.MANXB) {
       const maNXBLogic = await getMaNXBFromId(db, updateData.MANXB);
 
       if (maNXBLogic) {
-        updateData.MANXB = maNXBLogic; // Lưu Mã logic (ví dụ: NXB001)
+        updateData.MANXB = maNXBLogic; // Lưu Mã logic
       } else {
         return res
           .status(400)
           .json({ message: "Nhà Xuất Bản không tồn tại hoặc không hợp lệ." });
       }
     }
-    // ------------------------------------------------------------------
 
     // nếu người dùng upload ảnh mới
     if (req.file) {
@@ -128,10 +123,6 @@ exports.update = async (req, res) => {
   }
 };
 
-// =========================================================================
-// HÀM GETALL VÀ GETONE (ĐÃ SỬA TÊN FIELD TENNXB)
-// =========================================================================
-
 exports.getAll = async (req, res) => {
   let client;
   try {
@@ -152,7 +143,7 @@ exports.getAll = async (req, res) => {
             as: "NXBInfo",
           },
         },
-        { $unwind: { path: "$NXBInfo", preserveNullAndEmptyArrays: true } }, // ✅ JOIN TÁC GIẢ
+        { $unwind: { path: "$NXBInfo", preserveNullAndEmptyArrays: true } }, // JOIN TÁC GIẢ
 
         {
           $lookup: {
@@ -162,14 +153,14 @@ exports.getAll = async (req, res) => {
             as: "TacGiaInfo",
           },
         },
-        { $unwind: { path: "$TacGiaInfo", preserveNullAndEmptyArrays: true } }, // ✅ TẠO FIELD PHẲNG (ĐÃ SỬA TENNXB => TenNXB)
+        { $unwind: { path: "$TacGiaInfo", preserveNullAndEmptyArrays: true } }, // TẠO FIELD PHẲNG (ĐÃ SỬA TENNXB => TenNXB)
 
         {
           $addFields: {
             TENNXB: "$NXBInfo.TENNXB", // Sửa: Giả định trường NXB là TenNXB
             TenTacGia: "$TacGiaInfo.TenTacGia",
           },
-        }, // ✅ SEARCH SAU KHI ĐÃ CÓ ĐẦY ĐỦ FIELD
+        }, // SEARCH SAU KHI ĐÃ CÓ ĐẦY ĐỦ FIELD
 
         {
           $match: keyword
@@ -181,7 +172,7 @@ exports.getAll = async (req, res) => {
                 ],
               }
             : {},
-        }, // ✅ ẨN OBJECT THỪA
+        }, // ẨN OBJECT THỪA
 
         {
           $project: {

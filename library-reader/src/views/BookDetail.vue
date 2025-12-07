@@ -1,42 +1,45 @@
 <template>
-    <div class="position-absolute mt-3 ml-3">
-        <button @click="$router.back()" class="btn btn-outline-light btn-sm shadow back-btn">
-            ← Quay lại
-        </button>
-    </div>
-    <div class="page d-flex justify-content-center align-items-center">
-        <div v-if="loading" class="status-box">
-            Đang tải...
+    <div>
+        <div class="position-absolute mt-3 ml-3">
+            <button @click="$router.back()" class="btn btn-outline-light btn-sm shadow back-btn">
+                ← Quay lại
+            </button>
         </div>
-        <div v-else-if="book" class="detail-card">
-            <h2 class="title">{{ book.TenSach || book.title }}</h2>
+        <div class="page d-flex justify-content-center align-items-center">
+            <div v-if="loading" class="status-box">
+                Đang tải...
+            </div>
+            <div v-else-if="book" class="detail-card">
+                <h2 class="title">{{ book.TenSach || book.title }}</h2>
 
-            <div class="content">
-                <div v-if="book.ImageUrl" class="img-box">
-                    <img :src="apiBase + book.ImageUrl" :alt="book.TenSach" />
-                </div>
+                <div class="content">
+                    <div v-if="book.ImageUrl" class="img-box">
+                        <img :src="apiBase + book.ImageUrl" :alt="book.TenSach" />
+                    </div>
 
-                <div class="info">
-                    <p><span class="label">Mã sách:</span> {{ book.MaSach || book.code }}</p>
-                    <p><span class="label">Tác giả:</span> <span class="author">{{ book.TacGia || book.author }}</span>
-                    </p>
-                    <p>
-                        <span class="label">Nhà xuất bản:</span>
-                        <span class="author">
-                            {{ book.TENNXB || book.NhaXuatBan?.TENNXB || 'Đang cập nhật' }}
-                        </span>
-                    </p>
+                    <div class="info">
+                        <p><span class="label">Mã sách:</span> {{ book.MaSach || book.code }}</p>
+                        <p><span class="label">Tác giả:</span> <span class="author">{{ book.TacGia || book.author
+                        }}</span>
+                        </p>
+                        <p>
+                            <span class="label">Nhà xuất bản:</span>
+                            <span class="author">
+                                {{ book.TENNXB || book.NhaXuatBan?.TENNXB || 'Đang cập nhật' }}
+                            </span>
+                        </p>
 
-                    <router-link :to="`/borrow/${book.MaSach || book._id}`" class="borrow-btn" @click.stop>
-                        Đăng ký mượn
-                    </router-link>
+                        <router-link :to="`/borrow/${book.MaSach || book._id}`" class="borrow-btn" @click.stop>
+                            Đăng ký mượn
+                        </router-link>
 
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div v-else class="status-box">
-            Không tìm thấy sách
+            <div v-else class="status-box">
+                Không tìm thấy sách
+            </div>
         </div>
     </div>
 </template>

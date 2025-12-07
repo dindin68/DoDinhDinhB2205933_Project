@@ -18,6 +18,7 @@
                             <span class="text-white mr-3">{{ HoTenNV }}</span>
                             <button @click="logout" class="btn btn-outline-light">Đăng xuất</button>
                         </div>
+
                     </div>
                 </nav>
             </div>
@@ -36,16 +37,16 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const isLogged = ref(false)
-const HoTenNV = ref('Nhân viên') // ✅ KHAI BÁO HOÁ TEN NHÂN VIÊN
+const HoTenNV = ref('Nhân viên') // KHAI BÁO HOÁ TEN NHÂN VIÊN
 
 const loadUserState = () => {
     const adminUser = localStorage.getItem('adminUser')
     const adminToken = localStorage.getItem('admin_token')
 
-    // 1. Cập nhật trạng thái đăng nhập
+    // Cập nhật trạng thái đăng nhập
     isLogged.value = !!(adminUser || adminToken)
 
-    // 2. Tải Tên Nhân Viên
+    // Tải Tên Nhân Viên
     if (adminUser) {
         try {
             const user = JSON.parse(adminUser)
@@ -86,6 +87,5 @@ const logout = () => {
 .hover-scale:hover {
     transform: scale(1.1);
     color: #facc15 !important;
-    /* vàng sáng tương tự Tailwind hover:text-yellow-300 */
 }
 </style>

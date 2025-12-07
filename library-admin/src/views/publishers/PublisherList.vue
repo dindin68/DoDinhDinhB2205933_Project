@@ -2,7 +2,7 @@
     <div class="container mt-3">
         <div class="card shadow-lg border-0 rounded-lg">
 
-            <!-- ✅ HEADER MỚI -->
+            <!--HEADER MỚI -->
             <div class="card-header text-white"
                 style="background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899); border-radius: 0.5rem;">
 
@@ -16,7 +16,7 @@
                         </h3>
                     </div>
 
-                    <!-- ✅ SEARCH BAR CHUẨN ĐÃ LƯU -->
+                    <!-- SEARCH BAR CHUẨN ĐÃ LƯU -->
                     <div class="col-12 col-md-8">
                         <div class="input-group shadow-sm">
                             <input v-model="q" type="text" class="form-control border-0 py-2"
@@ -24,7 +24,7 @@
                         </div>
                     </div>
 
-                    <!-- ✅ NÚT + ICON -->
+                    <!--NÚT + ICON -->
                     <div class="col-12 col-md-1 text-end">
                         <router-link to="/publishers/create"
                             class="btn btn-light btn-sm shadow-sm d-flex align-items-center justify-content-center ms-auto"
@@ -121,7 +121,7 @@ const deletePublisher = async (id) => {
     }
 }
 
-// ✅ LỌC THEO SEARCH
+// LỌC THEO SEARCH
 const filteredPublishers = computed(() => {
     if (!q.value) return publishers.value
 

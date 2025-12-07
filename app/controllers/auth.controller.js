@@ -5,7 +5,6 @@ const jwt = require("jsonwebtoken");
 exports.login = async (req, res) => {
   let client;
   try {
-    // Accept multiple possible field names to be forgiving with front-end payloads
     const { phone, password } = req.body;
     const altPhone =
       req.body.SoDienThoai || req.body.DienThoai || req.body.username;
@@ -23,7 +22,6 @@ exports.login = async (req, res) => {
     client = await MongoDB.connect(process.env.MONGO_URI);
     const db = client.db("library_db");
 
-    // Find employee by phone or MSNV
     const employee = await db.collection("NhanVien").findOne({
       $or: [{ SoDienThoai: finalPhone }, { MSNV: finalPhone }],
     });
@@ -43,7 +41,6 @@ exports.login = async (req, res) => {
       }
     }
 
-    // If stored password is plaintext, allow login and migrate to hash
     if (!isMatch && stored && finalPassword === stored) {
       isMatch = true;
       try {
@@ -123,7 +120,6 @@ exports.readerLogin = async (req, res) => {
       }
     }
 
-    // fallback plaintext
     if (!isMatch && stored && finalPassword === stored) {
       isMatch = true;
       try {

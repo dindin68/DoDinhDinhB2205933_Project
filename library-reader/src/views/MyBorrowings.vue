@@ -22,7 +22,7 @@
         <div v-else>
             <div v-for="b in filteredItems" :key="b._id" class="card shadow-sm mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">
+                    <h5 class="card-title text-primary">
                         {{ b.MaMuon || b._id }}
                     </h5>
 
@@ -32,17 +32,24 @@
 
                     <p class="card-text">
                         <strong>Trạng thái:</strong>
-                        <span :class="statusClass(b.TrangThai)">
-                            {{ b.TrangThai }}
+                        <span :class="statusClass(b.TrangThai)" class="ms-1">
+                            {{ formatStatus(b.TrangThai) }}
                         </span>
                     </p>
+
                     <p class="card-text mb-0" v-if="getReturnStatus(b)">
                         <strong>Trạng thái trả:</strong>
-                        <span :class="getReturnStatus(b).class">
+                        <span :class="getReturnStatus(b).class" class="ms-1">
                             {{ getReturnStatus(b).label }}
                         </span>
                     </p>
 
+                    <div v-if="b.TrangThai === 'KhongDuyet'" class="alert alert-danger mt-3 p-2 mb-0"
+                        style="font-size: 0.9rem;">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        <strong>Lý do từ chối:</strong>
+                        {{ b.GhiChu || 'Vi phạm quy định (Bạn đã mượn hoặc trả quá hạn >= 5 lần).' }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -94,9 +101,7 @@ const filteredItems = computed(() => {
 
 const token = localStorage.getItem('reader_token') || ''
 
-// Thay thế dòng: const token = localStorage.getItem('reader_token') || ''
-// Bằng:
-const router = useRouter() // <-- Đảm bảo bạn đã import useRouter
+const router = useRouter()
 
 const load = async () => {
     loading.value = true
@@ -110,11 +115,6 @@ const load = async () => {
     }
 
     try {
-        // SỬ DỤNG AXIOS INTERCEPTOR để đính kèm token (đã thảo luận trước)
-        // Nếu không, bạn cần đính kèm token thủ công ở đây:
-        // const res = await api.get('/borrowings/me', { headers: { Authorization: `Bearer ${token}` } })
-
-        // Giả định Axios đã được cấu hình để đính kèm token:
         const res = await api.get('/borrowings/me')
         items.value = res.data || []
     } catch (e) {
@@ -132,25 +132,26 @@ const load = async () => {
 
 onMounted(load)
 
-// CSS class theo trạng thái
-const statusClass = (st) => {
-    return {
-        "badge badge-secondary": st === "ChoDuyet",
-        "badge badge-danger": st === "KhongDuyet",
-        "badge badge-info": st === "DaDuyet",
-        "badge badge-primary": st === "DaMuon",
-        "badge badge-success": st === "DaTra",
-        "badge badge-warning text-dark": st === "QuaHan",
+const formatStatus = (s) => {
+    switch (s) {
+        case 'ChoDuyet': return 'Chờ duyệt';
+        case 'DaDuyet': return 'Đã duyệt';
+        case 'KhongDuyet': return 'Không duyệt';
+        case 'DaMuon': return 'Đang mượn';
+        case 'DaTra': return 'Đã trả';
+        case 'QuaHan': return 'Quá hạn';
+        default: return s;
     }
 }
-
 const getReturnStatus = (b) => {
-    // ✅ CHƯA TRẢ
-    if (!b.NgayTraThucTe) {
-        return { label: 'Chưa trả', class: 'badge bg-secondary' }
+    if (['ChoDuyet', 'DaDuyet', 'KhongDuyet'].includes(b.TrangThai)) {
+        return { label: 'Chưa nhận sách', class: 'badge bg-light text-secondary border' }
     }
 
-    // ✅ ĐÃ TRẢ → SO SÁNH ĐÚNG HẠN / TRỄ HẠN
+    if (!b.NgayTraThucTe) {
+        return { label: 'Chưa trả', class: 'badge bg-warning text-dark' }
+    }
+
     const dueDate = new Date(b.NgayTra)
     dueDate.setHours(0, 0, 0, 0)
 
@@ -162,6 +163,17 @@ const getReturnStatus = (b) => {
     }
 
     return { label: 'Đúng hạn', class: 'badge bg-success' }
+}
+
+const statusClass = (st) => {
+    return {
+        "badge bg-secondary": st === "ChoDuyet",
+        "badge bg-danger": st === "KhongDuyet",
+        "badge bg-info text-dark": st === "DaDuyet",
+        "badge bg-primary": st === "DaMuon",
+        "badge bg-success": st === "DaTra",
+        "badge bg-warning text-dark": st === "QuaHan",
+    }
 }
 
 </script>

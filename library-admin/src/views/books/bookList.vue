@@ -2,7 +2,7 @@
     <div class="container mt-3">
         <div class="card shadow-lg border-0 rounded-lg">
 
-            <!-- ✅ HEADER MỚI -->
+            <!-- HEADER MỚI -->
             <div class="card-header text-white"
                 style="background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899); border-radius: 0.5rem;">
 
@@ -16,7 +16,7 @@
                         </h3>
                     </div>
 
-                    <!-- ✅ SEARCH BAR CHUẨN -->
+                    <!-- SEARCH BAR CHUẨN -->
                     <div class="col-12 col-md-8">
                         <div class="input-group shadow-sm">
                             <input v-model="q" type="text" class="form-control border-0 py-2"
@@ -24,7 +24,7 @@
                         </div>
                     </div>
 
-                    <!-- ✅ NÚT + ICON -->
+                    <!-- NÚT + ICON -->
                     <div class="col-12 col-md-1 text-end">
                         <router-link to="/books/create"
                             class="btn btn-light btn-sm shadow-sm d-flex align-items-center justify-content-center ms-auto"
@@ -47,8 +47,9 @@
                                 <th>Ảnh</th>
                                 <th>Tên sách</th>
                                 <th class="d-none d-md-table-cell">Tác giả</th>
+                                <th>Giá / SL</th>
                                 <th class="d-none d-md-table-cell">NXB</th>
-                                <th>Năm XB</th>
+                                <th class="d-none d-md-table-cell">Năm XB</th>
                                 <th>Hành động</th>
                             </tr>
                         </thead>
@@ -69,6 +70,14 @@
                                 </td>
 
                                 <td class="d-none d-md-table-cell">{{ b.TacGia }}</td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="text-success font-weight-bold">
+                                            {{ formatCurrency(b.DONGIA) }}
+                                        </span>
+                                        <small class="text-muted">SL: {{ b.SOQUYEN || 0 }}</small>
+                                    </div>
+                                </td>
                                 <td class="d-none d-md-table-cell">{{ b.TENNXB }}</td>
 
                                 <td>{{ b.NamXuatBan }}</td>
@@ -128,8 +137,14 @@ const deleteBook = async (id) => {
         fetchBooks()
     }
 }
+// Thêm vào trong <script setup>
 
-// ✅ LỌC TÌM KIẾM
+const formatCurrency = (value) => {
+    if (!value) return '0 ₫';
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+}
+
+// LỌC TÌM KIẾM
 const filteredBooks = computed(() => {
     if (!q.value) return books.value
 
@@ -146,7 +161,6 @@ onMounted(fetchBooks)
 
 
 <style scoped>
-/* Ảnh sách */
 .book-img {
     width: 40px;
     height: 60px;
@@ -154,13 +168,11 @@ onMounted(fetchBooks)
     border-radius: 6px;
 }
 
-/* Hover bảng */
 .table tbody tr:hover {
     background: #f0f4ff;
     transition: background 0.2s;
 }
 
-/* Nút action */
 .btn-action:hover {
     transform: scale(1.05);
     transition: transform 0.2s;
@@ -170,7 +182,6 @@ onMounted(fetchBooks)
     font-size: 0.8rem;
 }
 
-/* Responsive Mobile */
 @media (max-width: 768px) {
     .btn-action {
         font-size: 0.7rem;
