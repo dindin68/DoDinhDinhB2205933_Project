@@ -144,7 +144,14 @@ exports.getAll = async (req, res) => {
           },
         },
         { $unwind: { path: "$NXBInfo", preserveNullAndEmptyArrays: true } }, // JOIN TÁC GIẢ
-
+        {
+          $lookup: {
+            from: "THEODOIMUONSACH", // Tên collection mượn sách
+            localField: "MaSach", // Trường liên kết ở bảng SACH
+            foreignField: "MaSach", // Trường liên kết ở bảng THEODOIMUONSACH
+            as: "ThongTinMuon",
+          },
+        },
         {
           $lookup: {
             from: "TACGIA",
@@ -157,6 +164,22 @@ exports.getAll = async (req, res) => {
 
         {
           $addFields: {
+            SoLuongDaMuon: {
+              $size: {
+                $filter: {
+                  input: "$ThongTinMuon",
+                  as: "item",
+                  cond: {
+                    // Lọc các trạng thái được coi là "Đang giữ sách"
+                    // BẠN CẦN SỬA LẠI GIÁ TRỊ NÀY CHO KHỚP VỚI DB CỦA BẠN
+                    $in: [
+                      "$$item.TrangThai",
+                      ["Đã duyệt", "Đang mượn", "Chờ lấy"],
+                    ],
+                  },
+                },
+              },
+            },
             TENNXB: "$NXBInfo.TENNXB", // Sửa: Giả định trường NXB là TenNXB
             TenTacGia: "$TacGiaInfo.TenTacGia",
           },
@@ -178,6 +201,7 @@ exports.getAll = async (req, res) => {
           $project: {
             NXBInfo: 0,
             TacGiaInfo: 0,
+            ThongTinMuon: 0,
           },
         },
       ])

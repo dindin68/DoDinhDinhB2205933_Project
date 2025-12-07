@@ -3,6 +3,7 @@ const router = express.Router();
 const borrowingController = require("../controllers/borrowing.controller");
 
 router.get("/", borrowingController.getAll);
+router.route("/stats").get(borrowingController.getAllBookStats);
 // Route mới: Kiểm tra và cập nhật trạng thái tự động
 router.get("/check-overdue", borrowingController.checkOverdueStatus);
 // place '/me' before '/:id' to prevent route param collision

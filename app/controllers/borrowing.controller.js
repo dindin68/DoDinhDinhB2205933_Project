@@ -154,10 +154,8 @@ exports.updateStatus = async (req, res) => {
 
     let isValid = false;
 
-    // 👇 KIỂM TRA LOGIC CHUYỂN ĐỔI TRẠNG THÁI
     switch (borrowing.TrangThai) {
       case "ChoDuyet":
-        // 🔴 SỬA Ở ĐÂY: Thêm điều kiện || TrangThai === "KhongDuyet"
         if (TrangThai === "DaDuyet" || TrangThai === "KhongDuyet") {
           isValid = true;
         }
@@ -254,6 +252,34 @@ exports.getMyBorrowings = async (req, res) => {
       .toArray();
 
     res.json(borrowings);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  } finally {
+    if (client) await client.close();
+  }
+};
+exports.getAllBookStats = async (req, res) => {
+  let client;
+  try {
+    client = await MongoDB.connect(process.env.MONGO_URI);
+    const db = client.db("library_db");
+
+    const stats = await db
+      .collection("THEODOIMUONSACH")
+      .aggregate([
+        {
+          $match: { TrangThai: { $in: ["DaMuon", "DaDuyet"] } },
+        },
+        {
+          $group: {
+            _id: "$MaSach",
+            count: { $sum: 1 },
+          },
+        },
+      ])
+      .toArray();
+
+    res.json(stats);
   } catch (err) {
     res.status(500).json({ message: err.message });
   } finally {

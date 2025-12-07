@@ -48,6 +48,7 @@
                                 <th>Tên sách</th>
                                 <th class="d-none d-md-table-cell">Tác giả</th>
                                 <th>Giá / SL</th>
+                                <th>Đã mượn</th>
                                 <th class="d-none d-md-table-cell">NXB</th>
                                 <th class="d-none d-md-table-cell">Năm XB</th>
                                 <th>Hành động</th>
@@ -76,6 +77,16 @@
                                             {{ formatCurrency(b.DONGIA) }}
                                         </span>
                                         <small class="text-muted">SL: {{ b.SOQUYEN || 0 }}</small>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge"
+                                        :class="{ 'bg-danger': b.SoLuongDaMuon >= b.SOQUYEN, 'bg-info': b.SoLuongDaMuon < b.SOQUYEN }">
+                                        {{ b.SoLuongDaMuon || 0 }}
+                                    </span>
+
+                                    <div style="font-size: 0.75rem; color: #666; margin-top: 4px;">
+                                        Còn: {{ (b.SOQUYEN || 0) - (b.SoLuongDaMuon || 0) }}
                                     </div>
                                 </td>
                                 <td class="d-none d-md-table-cell">{{ b.TENNXB }}</td>
@@ -121,33 +132,47 @@ const books = ref([])
 const q = ref('')
 const apiBase = "http://localhost:3000"
 
-// Fetch
 const fetchBooks = async () => {
     try {
-        const res = await api.get('/books')
-        books.value = res.data
+        const [resBooks, resStats] = await Promise.all([
+            api.get('/books'),
+            api.get('/borrowings/stats')
+        ]);
+
+        const rawBooks = resBooks.data;
+        const stats = resStats.data;
+
+        books.value = rawBooks.map(book => {
+            const stat = stats.find(s => s._id === book.MaSach);
+
+            const soLuongDangBan = stat ? stat.count : 0;
+
+            return {
+                ...book,
+                SoLuongDaMuon: soLuongDangBan
+            };
+        });
+
     } catch (err) {
-        console.error(err)
+        console.error("Lỗi khi tải dữ liệu:", err);
     }
 }
 
 const deleteBook = async (id) => {
     if (confirm('Xóa sách này vĩnh viễn?')) {
         await api.delete(`/books/${id}`)
-        fetchBooks()
+        fetchBooks() // Gọi lại hàm fetchBooks mới để cập nhật lại bảng
     }
 }
-// Thêm vào trong <script setup>
 
 const formatCurrency = (value) => {
     if (!value) return '0 ₫';
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
 }
 
-// LỌC TÌM KIẾM
+// LỌC TÌM KIẾM (Giữ nguyên)
 const filteredBooks = computed(() => {
     if (!q.value) return books.value
-
     const t = q.value.toLowerCase()
     return books.value.filter(b =>
         (b.MaSach || '').toLowerCase().includes(t) ||
